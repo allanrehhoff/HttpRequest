@@ -3,6 +3,7 @@ _By Allan Rehhoff_
 
 ```
 <?php
+	require "autoload.php";
 	$request = new WebRequest("https://google.com");
 	$response = $request->get();
 ?>
