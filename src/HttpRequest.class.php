@@ -1,19 +1,23 @@
 <?php
 /**
-* Provides a (relatively?) easy way of performing RESTful web requests.
-* There are usage examples available in the attached HttpRequestTest 
-* (you should be able to locate that in the reposity using the link in this docblock)
+* Provides a (relatively?) easy way of performing RESTful requests via HTTP.
+* There are usage examples available in the attached HttpRequestTest cases
+* (you should be able to locate that in the repository using the link in this docblock)
 * Or read the individual method documentation for more information.
-* 
+*
 * Currently supports GET, POST, HEAD, PUT, DELETE, PATCH requests.
 * Other requests types is possible by using the ->call(); method.
 *
-* This class implements the magic method __cal(); in a way that allows you to call any curl_* function
+* This class implements the magic method __call(); in a way that allows you to call any curl_* function
 * That has not already been implemented by this class, while omitting the curl handle.
+*
+* Some limitations may apply because this library wraps around cURL
 *
 * @author Allan Thue Rehhoff <http://rehhoff.me>
 * @version 2.0
-* @link https://bitbucket.org/allanrehhoff/phptools/src
+* @package HttpRequest
+* @license WTFPL
+* {@link https://bitbucket.org/allanrehhoff/httprequest/src HttpRequest at bitbucket}
 */
 
 class HttpRequest {
@@ -101,8 +105,11 @@ class HttpRequest {
 		$this->setOption(CURLOPT_HTTPHEADER, $this->headers);
 		$this->setOption(CURLOPT_TIMEOUT, $timeout);
 		$this->setOption(CURLOPT_WRITEHEADER, $this->headerHandle);
+
+		// Store recieved cookies here
 		$this->setOption(CURLOPT_COOKIEJAR, $this->cookiejar);
 		
+		// If there is any stored cookies, use the assigned cookiejar
 		if(filesize($this->cookiejar) > 0) {
 			$this->setOption(CURLOPT_COOKIEFILE, $this->cookiejar);
 		}
@@ -227,8 +234,8 @@ class HttpRequest {
 	}
 
 	/**
-	* The name of a file in which to store all recieved cookies
-	* when the handle is closed, e.g. after a call to curl_close.
+	* The name of a file in which to store all recieved cookies when the handle is closed, e.g. after a call to curl_close.
+	* This is automatically done by this class is destructed.
 	* @param (string) $filepath
 	* @return (object)
 	* @since 1.4

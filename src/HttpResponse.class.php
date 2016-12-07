@@ -1,6 +1,8 @@
 <?php
 /**
-* Represents a HTTP response
+* Parses and contains all content written to the HTTP stream
+* @package HttpRequest
+* @license WTFPL
 * @version 2.0
 * @author Allan Thue Rehhoff
 */
@@ -14,7 +16,7 @@ class HttpResponse {
 		if($this->request->response === false) {
 			throw new HttpException(curl_errno($this->request->curl).": ".curl_error($this->request->curl), curl_errno($this->request->curl));
 		} else if($this->isSuccess() === false) {
-			throw new HttpException("HTTP Request failed ".'('.$this->getInfo("http_code").')');
+			throw new HttpException("HTTP Request failed ".'('.$this->getCode().')');
 		}
 
 		// And parse the headers for a client to use.
@@ -56,18 +58,6 @@ class HttpResponse {
 		return  $this->rawHeaders."\r\n".$this->request->response;
 	}
 
-
-	/**
-	* Finds out whether a request was successful or not.
-	* @return (bool)
-	*/
-	public function isSuccess() {
-		if ($this->getInfo("http_code") > 299) {
-			return false;
-		}
-		return true;
-	}
-
 	/**
 	* Get cURL information regarding this request.
 	* If index is given, returns its value, NULL if index is undefined.
@@ -75,7 +65,7 @@ class HttpResponse {
 	*
 	* @param (string) $opt An index from curl_getinfo() returned array.
 	* @see http://php.net/manual/en/function.curl-getinfo.php
-	*  @throws HttpException
+	* @throws HttpException
 	* @return (mixed)
 	*/
 	public function getInfo($opt = false) {
@@ -98,6 +88,16 @@ class HttpResponse {
 		return (int) $this->getInfo("http_code");
 	}
 
+	/**
+	* Finds out whether a request was successful or not.
+	* @return (bool)
+	*/
+	public function isSuccess() {
+		if ($this->getCode() > 299) {
+			return false;
+		}
+		return true;
+	}
 	/**
 	* Returns parsed header values.
 	* If header is given returns that headers value.

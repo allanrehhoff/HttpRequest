@@ -1,8 +1,10 @@
 <?php
 /**
-* @todo Write documentation
+* Exception class used by the library to distinct any thrown exception from a standard PHP Exception
 * @extends Exception
 * @author Allan Thue Rehhoff
+* @package HttpRequest
+* @license WTFPL
 */
 class HttpException extends Exception {
 	public function __construct($message, $code = 0, Exception $previous = null) {
