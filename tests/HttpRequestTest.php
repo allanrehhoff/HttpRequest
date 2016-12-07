@@ -80,6 +80,7 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 
 	/**
 	* Now test that we can actually put stuff.
+	* @author Allan Thue Rehhoff
 	*/
 	public function testPutData() {
 		$req = new HttpRequest("https://httpbin.org/put");
@@ -95,6 +96,16 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 	public function testDeleteRequest() {
 		$req = (new HttpRequest("https://httpbin.org/delete"))->delete();
 		$this->assertEquals(200, $req->getInfo("http_code"));
+	}
+
+	/**
+	* Quick test that we get a useful object from an XML response
+	* @author Allan Rehhoff
+	*/
+	public function testParseXmlPositive() {
+		$req = new HttpRequest("https://httpbin.org/xml");
+		$xml = $req->get()->asXml();
+		$this->assertInstanceOf("SimpleXMLElement", $xml);
 	}
 
 	/**

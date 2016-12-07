@@ -14,7 +14,7 @@
 * Some limitations may apply because this library wraps around cURL
 *
 * @author Allan Thue Rehhoff <http://rehhoff.me>
-* @version 2.0
+* @version 2.1
 * @package HttpRequest
 * @license WTFPL
 * {@link https://bitbucket.org/allanrehhoff/httprequest/src HttpRequest at bitbucket}

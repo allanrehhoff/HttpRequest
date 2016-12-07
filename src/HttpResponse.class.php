@@ -3,12 +3,12 @@
 * Parses and contains all content written to the HTTP stream
 * @package HttpRequest
 * @license WTFPL
-* @version 2.0
 * @author Allan Thue Rehhoff
 */
 class HttpResponse {
 	private $request, $rawHeaders;
 	private $responseHeaders = [];
+	public $xmlErrors = [];
 
 	public function __construct(HttpRequest $request) {
 		$this->request = $request;
@@ -96,8 +96,10 @@ class HttpResponse {
 		if ($this->getCode() > 299) {
 			return false;
 		}
+
 		return true;
 	}
+
 	/**
 	* Returns parsed header values.
 	* If header is given returns that headers value.
@@ -124,6 +126,7 @@ class HttpResponse {
 		if($cookie !== false) {
 			return isset($this->responseHeaders["Set-Cookie"][$cookie]) ? $this->responseHeaders["Set-Cookie"][$cookie] : null;
 		}
+
 		return $this->responseHeaders["Set-Cookie"];
 	}
 
@@ -135,6 +138,7 @@ class HttpResponse {
 		if($this->request->response === null) {
 			throw new HttpException("Perform a request before accessing response data.");
 		}
+
 		return $this->request->response;
 	}
 
@@ -152,5 +156,18 @@ class HttpResponse {
 	*/
 	public function asArray() {
 		return json_decode($this->getResponse(), true);
+	}
+
+	/**
+	* Returns a SimpleXML object with containing the response content.
+	* After calling any potential xml error will be available for inspection in the $xmlErrors property.
+	* @param (bool) $useErrors Toggle xml errors supression. Please be advised that setting this to true will also clear any previous XML errors in the buffer.
+	* @return (object)
+	*/
+	public function asXml($useErrors = false) {
+		libxml_use_internal_errors($useErrors);
+		$xml = simplexml_load_string($this->getResponse());
+		if($useErrors == false) $this->xmlErrors = libxml_get_errors();
+		return $xml;
 	}
 }
