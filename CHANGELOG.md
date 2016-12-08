@@ -1,7 +1,8 @@
 #Changelog#
 v2.1.1  
 - Changed the way HTTP error codes are handled to a more specific way  
-
+- Fixed a bug where HttpResponse::isSuccess(); would return false, when a redirect was recieved  
+  
 v2.1  
 - Implemented classes autoloading functionality  
 - Introduced HttpResponse::asXml(); methoded  

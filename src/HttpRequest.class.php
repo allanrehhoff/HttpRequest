@@ -83,7 +83,7 @@ class HttpRequest {
 	/**
 	* The primary function of this class, performs the actual call to a specified service. Parsing the headers afterwards.
 	* @param (string) $method HTTP method to use for this request.
-	* @param (mixed) $data The full data to "post" with this request
+	* @param (mixed) $data The full data body to transfer with this request.
 	* @param (int) $timeout Seconds this request shall last before it times out.
 	* @return object
 	*/
@@ -105,9 +105,7 @@ class HttpRequest {
 		$this->setOption(CURLOPT_HTTPHEADER, $this->headers);
 		$this->setOption(CURLOPT_TIMEOUT, $timeout);
 		$this->setOption(CURLOPT_WRITEHEADER, $this->headerHandle);
-
-		// Store recieved cookies here
-		$this->setOption(CURLOPT_COOKIEJAR, $this->cookiejar);
+		$this->setOption(CURLOPT_COOKIEJAR, $this->cookiejar); // Store recieved cookies here
 		
 		// If there is any stored cookies, use the assigned cookiejar
 		if(filesize($this->cookiejar) > 0) {
@@ -115,6 +113,8 @@ class HttpRequest {
 		}
 
 		// Send cookies manually associated with this request
+		// Most likely not going to happen if a cookiejar was utilized.
+		// But we're going to allow it anyway. at least as for now.
 		if(!empty($this->cookies)) {
 			$cookieString = '';
 			$iterations = 0;
@@ -134,13 +134,7 @@ class HttpRequest {
 		$this->response = curl_exec($this->curl);
 		$this->curlInfo = curl_getinfo($this->curl);
 
-		$response = new HttpResponse($this);
-
-		if($response->isSuccess()) {
-			return $response;
-		} else {
-			throw new Exception("HTTP Request failed: ".$response->getCode());
-		}
+		return new HttpResponse($this);
 	}
 
 	/**

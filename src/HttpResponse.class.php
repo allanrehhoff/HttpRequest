@@ -91,11 +91,7 @@ class HttpResponse {
 	* @return (bool)
 	*/
 	public function isSuccess() {
-		if ($this->getCode() > 299) {
-			return false;
-		}
-
-		return true;
+		return $this->getCode() < 400;
 	}
 
 	/**
