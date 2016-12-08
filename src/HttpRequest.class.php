@@ -47,8 +47,8 @@ class HttpRequest {
 			CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_MAXREDIRS => 5,
 			CURLOPT_SSL_VERIFYPEER => true,
-			// CURLOPT_URL defaults to null, by assigning a potentially unmodified argument we ensure cURL behaves as it normally would
-			CURLOPT_URL => $url
+			CURLOPT_FAILONERROR => true,
+			CURLOPT_URL => $url // defaults to null, by assigning a potentially unmodified argument we ensure cURL behaves as it normally would
 		];
 	}
 

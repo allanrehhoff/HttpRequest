@@ -15,8 +15,6 @@ class HttpResponse {
 
 		if($this->request->response === false) {
 			throw new HttpException(curl_errno($this->request->curl).": ".curl_error($this->request->curl), curl_errno($this->request->curl));
-		} else if($this->isSuccess() === false) {
-			throw new HttpException("HTTP Request failed ".'('.$this->getCode().')');
 		}
 
 		// And parse the headers for a client to use.
