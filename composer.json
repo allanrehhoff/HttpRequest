@@ -1,0 +1,25 @@
+{
+	"name": "allanrehhoff/httprequest",
+	"type": "library",
+	"description": "RESTful HTTP Requests made easy by PHP and cURL",
+	"homepage": "https://github.com/allanrehhoff/httprequest",
+	"keywords": ["http", "request", "response", "http request", "http response", "restful", "curl", "php"],
+	"license": "WTFPL",
+	"authors": [
+		{
+			"name": "Allan Rehhoff",
+			"email": "allan.rehhoff@gmail.com",
+			"homepage": "http://rehhoff.me/",
+			"role": "Developer"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"Http\\": ""
+		}
+	},
+	"require" : {
+		"php" : "^5.4 || ^7.0",
+		"ext-curl": "*"
+	}
+}
