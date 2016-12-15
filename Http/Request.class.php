@@ -233,6 +233,7 @@ namespace Http {
 		* This is automatically done by this class is destructed.
 		* @param (string) $filepath
 		* @return (object)
+		* @throws Http\BadRequestException
 		* @since 1.4
 		*/
 		public function cookiejar($filepath) {
