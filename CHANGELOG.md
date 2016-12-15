@@ -2,7 +2,8 @@
 v2.2.0  
 - Seperated classes in Http\ namespace  
 - Removed incomplete tests  
-- Rewritten tests to be compatible with the latest structure
+- Rewritten tests to be compatible with the latest structure  
+- Added composer.json file, soon to be commited to packagist  
 
 v2.1.1  
 - Changed the way HTTP error codes are handled to a more specific way  
