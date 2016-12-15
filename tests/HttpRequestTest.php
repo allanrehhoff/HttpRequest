@@ -1,20 +1,20 @@
 <?php
 // Simple example on how to authorize against MailChimps API
-// $req = new HttpRequest("https://<dc>.api.mailchimp.com/3.0/lists");
+// $req = new Http\Request("https://<dc>.api.mailchimp.com/3.0/lists");
 // $req->authorize("apikey:<your-api-key>");
-// $req->call(HttpRequest::GET);
+// $req->call(Http\Request::GET);
 
 // Simple way to get the content of a webpage
-// print (new HttpRequest("http://rehhoff.me"))->get()->getResponse();
+// print (new Http\Request("http://rehhoff.me"))->get()->getResponse();
 // use "->setHeader($headernane, $headervalue);" before ->get() to provide additional headers
 
 // Or check the headers return by a server
-// $req = (new HttpRequest("http://rehhoff.me"))->head()->getResponseHeaders();
+// $req = (new Http\Request("http://rehhoff.me"))->head()->getResponseHeaders();
 // Why not set a timeout now that we are at it.
-// $req = (new HttpRequest("http://rehhoff.me"))->head(10)->getResponseHeaders();
+// $req = (new Http\Request("http://rehhoff.me"))->head(10)->getResponseHeaders();
 
 // You should also be able to use an unsupported HTTP Request.
-// $req = (new HttpRequest("http://rehhoff.me/help-for-example"))->call("OPTIONS")->getResponse();
+// $req = (new Http\Request("http://rehhoff.me/help-for-example"))->call("OPTIONS")->getResponse();
 
 // Example on how to add a new subscriber to your mailchimp list.
 // $subscriber = json_encode( array(
@@ -25,18 +25,18 @@
 // 		"LNAME" => $lastname
 // 	) ) );
 // 
-// $req = new HttpRequest("https://<dc>.api.mailchimp.com/3.0/lists/<list-id>/members");
+// $req = new Http\Request("https://<dc>.api.mailchimp.com/3.0/lists/<list-id>/members");
 // $req->authorize("apikey:<your-api-key>");
 // $req->post($subscriber, 15); // Second paramter set's timeout.
 
 // At some point you might also want to debug the request
-// print (new HttpRequest("http://rehhoff.me"))->verbose()->head()->getResponseHeaders();
+// print (new Http\Request("http://rehhoff.me"))->verbose()->head()->getResponseHeaders();
 
 // $request->getInfo("http_code"); Will return an integer representing the HTTP status of the request performed.
 // $request->getResponseHeader("http_code"); Will return the header string containing the status code.
 //
 // You can also print the object to see response formatted.
-// print (new HttpRequest())->setOpt(CURLOPT_URL, "http://rehhoff.me")->verbose()->head();
+// print (new Http\Request())->setOpt(CURLOPT_URL, "http://rehhoff.me")->verbose()->head();
 
 class HttpRequestTest extends PHPUnit_Framework_TestCase {
 	public function setUp() {
@@ -47,7 +47,7 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 	* @author Allan Rehhoff
 	*/	
 	public function testGetRequest() {
-		$req = (new HttpRequest("https://httpbin.org/get"))->get();
+		$req = (new Http\Request("https://httpbin.org/get"))->get();
 		$this->assertEquals(200, $req->getInfo("http_code"));
 	}
 
@@ -56,7 +56,7 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 	* @author Allan Rehhoff
 	*/
 	public function testPostRequest() {
-		$req = (new HttpRequest("https://httpbin.org/post"))->post();
+		$req = (new Http\Request("https://httpbin.org/post"))->post();
 		$this->assertEquals(200, $req->getInfo("http_code"));
 	}
 
@@ -65,7 +65,7 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 	* @author Allan Rehhoff
 	*/
 	public function testPatchRequest() {
-		$req = (new HttpRequest("https://httpbin.org/patch"))->patch();
+		$req = (new Http\Request("https://httpbin.org/patch"))->patch();
 		$this->assertEquals(200, $req->getInfo("http_code"));
 	}
 
@@ -74,7 +74,7 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 	* @author Allan Rehhoff
 	*/
 	public function testPutRequest() {
-		$req = (new HttpRequest("https://httpbin.org/put"))->put();
+		$req = (new Http\Request("https://httpbin.org/put"))->put();
 		$this->assertEquals(200, $req->getInfo("http_code"));
 	}
 
@@ -83,7 +83,7 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 	* @author Allan Thue Rehhoff
 	*/
 	public function testPutData() {
-		$req = new HttpRequest("https://httpbin.org/put");
+		$req = new Http\Request("https://httpbin.org/put");
 		$response = $req->put(http_build_query(["foo" => "bar"]))->asObject();
 
 		$this->assertTrue(isset($response->form->foo));
@@ -94,7 +94,7 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 	* @author Allan Rehhoff
 	*/
 	public function testDeleteRequest() {
-		$req = (new HttpRequest("https://httpbin.org/delete"))->delete();
+		$req = (new Http\Request("https://httpbin.org/delete"))->delete();
 		$this->assertEquals(200, $req->getInfo("http_code"));
 	}
 
@@ -103,7 +103,7 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 	* @author Allan Rehhoff
 	*/
 	public function testParseXmlPositive() {
-		$req = new HttpRequest("https://httpbin.org/xml");
+		$req = new Http\Request("https://httpbin.org/xml");
 		$xml = $req->get()->asXml();
 		$this->assertInstanceOf("SimpleXMLElement", $xml);
 	}
@@ -113,13 +113,13 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 	* @author Allan Rehhoff
 	*/
 	public function testGetRequestParams() {
-		$req = (new HttpRequest("https://httpbin.org/get?john=doe"))->get();
+		$req = (new Http\Request("https://httpbin.org/get?john=doe"))->get();
 		$response = json_decode($req->getResponse());
 		$this->assertNotEmpty($response->args);
 		$this->assertEquals("doe", $response->args->john);
 
 		$params = ["meal" => "pizza", "toppings" => ["cheese", "ham", "pineapple", "bacon"]];
-		$req2 = (new HttpRequest("https://httpbin.org/get"))->get($params);
+		$req2 = (new Http\Request("https://httpbin.org/get"))->get($params);
 		$response2 = json_decode($req2->getResponse(), true);
 		$this->assertNotEmpty($response2["args"]);
 		
@@ -164,7 +164,7 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 			"X-Lastname" => "Doe",
 		];
 
-		$req = new HttpRequest("https://httpbin.org/headers");
+		$req = new Http\Request("https://httpbin.org/headers");
 		foreach($ourHeaders as $key => $value) {
 			$req->setHeader($key.": ".$value);
 		}
@@ -186,7 +186,7 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 	public function testUserAgentSpoofing() {
 		$agent = "Mozilla/5.0 (Windows; U; Windows NT 6.1; rv:2.2) Gecko/20110201";
 
-		$req = new HttpRequest("https://httpbin.org/user-agent");
+		$req = new Http\Request("https://httpbin.org/user-agent");
 		$req->setOption(CURLOPT_USERAGENT, $agent);
 		$response = $req->get()->getResponse();
 		$response = json_decode($response, true);
@@ -201,22 +201,22 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 	public function testMaxRedirs() {
 		try {
 			$numRedirs = 10;
-			$req = new HttpRequest("https://httpbin.org/redirect/".$numRedirs);
+			$req = new Http\Request("https://httpbin.org/redirect/".$numRedirs);
 			$req->get()->getResponse();
-		} catch(Exception $e) {
+		} catch(\Http\BadRequestException $e) {
 			$this->assertEquals(CURLE_TOO_MANY_REDIRECTS, $e->getCode());
 			return;
 		}
-		$this->fail("Expected exception [Maximum (5) redirects followed] was not thrown.");
+		$this->fail("Expected BadRequestException exception [Maximum (5) redirects followed] was not thrown.");
 	}
 
 	/**
 	* Test invalid http codes are handled
-	* @expectedException HttpException
+	* @expectedException Http\BadRequestException
 	* @author Allan Rehhoff
 	*/
 	public function testIsInvalidHttpCode() {
-		$req = new HttpRequest("https://httpbin.org/status/418");
+		$req = new Http\Request("https://httpbin.org/status/418");
 		$req->get();
 	}
 
@@ -228,59 +228,13 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 		$u = "john";
 		$p = "doe";
 
-		$req = new HttpRequest("https://httpbin.org/hidden-basic-auth/".$u.'/'.$p);
+		$req = new Http\Request("https://httpbin.org/hidden-basic-auth/".$u.'/'.$p);
 		$req->authorize($u.':'.$p, CURLAUTH_BASIC);
 		$response = $req->get();
 
 		$this->assertEquals(200, $response->getCode());
 
 		$response = $response->asObject();
-		$this->assertTrue($response->authenticated);
-	}
-
-	/**
-	* Most developers most likely wont need digest access authentication, but i'm going to test it anyway.
-	* Even though I know that it is going to be painful as f*ck.
-	* @author Allan Rehhoff
-	* @todo Rewrite (or debug) this piece of garbage.
-	*/
-	public function testDigestAuth() {
-		// Seriously. f*ck this thing, i've spent numourus days already debugging this, and have been hitting a brick wall non-stop
-		$this->assertTrue(true);
-		return true;
-
-		$username = "john";
-		$password = "doe";
-		$requestUrl = "https://httpbin.org/digest-auth/auth/".$username.'/'.$password;
-		$req = (new HttpRequest($requestUrl))->get();
-
-		if($req->getResponseHeader("WWW-Authenticate") !== null) {
-			$authHeader = str_replace("Digest ", '', $req->getResponseHeader("WWW-Authenticate"));
-			$authHeaderParts = explode(',', $authHeader);
-			$authParts = [];
-
-			foreach($authHeaderParts as $pair) {
-				$pairValues = explode('=', $pair);
-				$authParts[trim($pairValues[0])] = trim($pairValues[1], '" ');
-			}
-
-			$realm = (isset($authParts['realm'])) ? $authParts['realm'] : "";
-			$nonce = (isset($authParts['nonce'])) ? $authParts['nonce'] : "";
-			$opaque = (isset($authParts['opaque'])) ? $authParts['opaque'] : "";
-
-			$authenticate1 = md5($username.":".$realm.":".$password);
-			$authenticate2 = md5("GET".":".$requestUrl);
-
-			$authResponse = md5($authenticate1.":".$nonce.":".$authenticate2);
-
-			$authStr = sprintf('Digest username="%s", realm="%s", nonce="%s", opaque="%s", uri="%s", response="%s"', $username, $realm, $nonce, $opaque, $requestUrl, $authResponse);
-
-			$req2 = new HttpRequest($requestUrl);
-			$req2->authorize($authStr, CURLAUTH_DIGEST)->get()->getResponseHeaders();
-		}
-
-		$this->assertEquals(200, $req->getInfo("http_code"));
-		$response = json_decode($req->getResponse());
 		$this->assertTrue($response->authenticated);
 	}
 
@@ -301,7 +255,7 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 		$data = array('tmpfile' => $cfile);
 
 		// Let's now do the more fancy part
-		$req = new HttpRequest("https://httpbin.org/post");
+		$req = new Http\Request("https://httpbin.org/post");
 		$req->setHeader("Content-Type", "multipart/form-data");
 		$res = $req->post($data)->getResponse();
 		
@@ -324,7 +278,7 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 		$filepath = __FILE__;
 		$tmpfileHandle = fopen($filepath, 'r');
 
-		$req = new HttpRequest("https://httpbin.org/put");
+		$req = new Http\Request("https://httpbin.org/put");
 		$req->setOption(CURLOPT_INFILE, $tmpfileHandle);
 		$req->setOption(CURLOPT_INFILESIZE, filesize($filepath));
 		$req->setOption(CURLOPT_PUT, true);

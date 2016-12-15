@@ -6,8 +6,10 @@
 * @package HttpRequest
 * @license WTFPL
 */
-class HttpException extends Exception {
-	public function __construct($message, $code = 0, Exception $previous = null) {
-		parent::__construct($message, $code, $previous);
+namespace Http {
+	class BadRequestException extends \Exception {
+		public function __construct($message, $code = 0, Exception $previous = null) {
+			parent::__construct($message, $code, $previous);
+		}
 	}
 }

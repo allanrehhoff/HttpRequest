@@ -1,4 +1,9 @@
 #Changelog#
+v2.2.0  
+- Seperated classes in Http\ namespace  
+- Removed incomplete tests  
+- Rewritten tests to be compatible with the latest structure
+
 v2.1.1  
 - Changed the way HTTP error codes are handled to a more specific way  
 - Fixed a bug where HttpResponse::isSuccess(); would return false, when a redirect was recieved  
