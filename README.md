@@ -1,5 +1,5 @@
 #HttpRequest - HTTP Requests the easy way#
-_By Allan Rehhoff_
+_By [ Allan Rehhoff ](http://rehhoff.me/)_
 
 ```
 <?php

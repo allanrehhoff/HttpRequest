@@ -91,7 +91,7 @@ namespace Http {
 		public function call($method = false, $data = false, $timeout = 60) {
 			// Make sure data are sent in a correct format.
 			if($method === self::GET) {
-				$getRequestParams = ($data !== false) ? '?'.http_build_query($data, '', '&') : ''; //($data !=== false) ? '?'.http_build_query($data) : '';
+				$getRequestParams = ($data !== false) ? '?'.http_build_query($data, '', '&') : '';
 				$this->setUrl($this->getUrl().$getRequestParams);
 				$this->setOption(CURLOPT_HTTPGET, true);
 			} elseif($method !== false) {

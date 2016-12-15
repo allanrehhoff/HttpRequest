@@ -19,7 +19,9 @@
 		}
 	},
 	"require" : {
-		"php" : "^5.4 || ^7.0",
-		"ext-curl": "*"
+		"php" : ">=5.4",
+		"ext-curl": "*",
+		"ext-json": "*",
+		"ext-libxml": "*"
 	}
 }
