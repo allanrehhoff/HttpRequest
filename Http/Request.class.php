@@ -215,6 +215,16 @@ namespace Http {
 		}
 
 		/**
+		* Specifies the port to be requested upon
+		* @param (int) a port number.
+		* @return (object)
+		*/
+		public function port($port) {
+			$this->setOption(CURLOPT_PORT, $port);
+			return $this;
+		}
+
+		/**
 		* Send a cookie with this request.
 		* @param (string) $name name of the cookie
 		* @param (string) $value value of the cookie
