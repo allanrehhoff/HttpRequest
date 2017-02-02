@@ -287,4 +287,18 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 
 		$this->assertNotEmpty($res->data);
 	}
+
+	/**
+	* Test we can do requests on a non-standard port
+	* @author Allan Rehhoff
+	*/
+	public function testRequestOnDifferentPort() {
+		try {
+			$request = new \Http\Request("localhost");
+			$response = $request->port(8080)->head();
+			$this->assertTrue($response->isSuccess());
+		} catch(Exception $e) {
+			$this->fail("Cannot request on port 8080");
+		}
+	}
 }
