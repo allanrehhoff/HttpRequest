@@ -1,4 +1,5 @@
 <?php
+
 // Simple example on how to authorize against MailChimps API
 // $req = new Http\Request("https://<dc>.api.mailchimp.com/3.0/lists");
 // $req->authorize("apikey:<your-api-key>");
