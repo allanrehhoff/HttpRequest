@@ -48,7 +48,7 @@ namespace Http {
 				CURLOPT_FOLLOWLOCATION => true,
 				CURLOPT_MAXREDIRS => 5,
 				CURLOPT_SSL_VERIFYPEER => true,
-				CURLOPT_FAILONERROR => true,
+				CURLOPT_FAILONERROR => false,
 				CURLOPT_URL => $url // defaults to null, by assigning a potentially unmodified argument we ensure cURL behaves as it normally would
 			];
 		}
