@@ -135,6 +135,10 @@ namespace Http {
 			$this->response = curl_exec($this->curl);
 			$this->curlInfo = curl_getinfo($this->curl);
 
+			if($this->response === false) {
+				throw new BadRequestException(curl_errno($this->curl).": ".curl_error($this->curl), curl_errno($this->curl));
+			}
+
 			return new Response($this);
 		}
 
@@ -235,6 +239,7 @@ namespace Http {
 				"name" => $name,
 				"value" => $value
 			];
+
 			return $this;
 		}
 
@@ -255,6 +260,19 @@ namespace Http {
 
 			$this->cookiejar = $filepath;
 			return $this;
+		}
+
+		/**
+		* Tells cURL if it should fail upon error, resulting in an exception being thrown
+		* Returns current setting value.
+		* @return (bool)
+		*/
+		public function failOnError($fail = null) {
+			if(is_bool($fail) === true) {
+				$this->setOption(CURLOPT_FAILONERROR, $fail);
+			}
+
+			return $this->getOption(CURLOPT_FAILONERROR);
 		}
 
 		/**

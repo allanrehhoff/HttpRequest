@@ -14,10 +14,6 @@ namespace Http {
 		public function __construct(\Http\Request $request) {
 			$this->request = $request;
 
-			if($this->request->response === false) {
-				throw new BadRequestException(curl_errno($this->request->curl).": ".curl_error($this->request->curl), curl_errno($this->request->curl));
-			}
-
 			// And parse the headers for a client to use.
 			rewind($this->request->headerHandle); 
 			$this->rawHeaders = rtrim(stream_get_contents($this->request->headerHandle), "\r\n");

@@ -42,6 +42,7 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 	public function setUp() {
 
 	}
+
 	/**
 	* Tests GET request works as expected
 	* @author Allan Rehhoff
@@ -217,7 +218,7 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 	*/
 	public function testIsInvalidHttpCode() {
 		$req = new Http\Request("https://httpbin.org/status/418");
-		$req->get();
+		$req->failOnError(true)->get();
 	}
 
 	/**
@@ -290,15 +291,11 @@ class HttpRequestTest extends PHPUnit_Framework_TestCase {
 
 	/**
 	* Test we can do requests on a non-standard port
+	* @expectedException Http\BadRequestException
 	* @author Allan Rehhoff
 	*/
 	public function testRequestOnDifferentPort() {
-		try {
-			$request = new \Http\Request("localhost");
-			$response = $request->port(8080)->head();
-			$this->assertTrue($response->isSuccess());
-		} catch(Exception $e) {
-			$this->fail("Cannot request on port 8080");
-		}
+		$request = new \Http\Request("localhost");
+		$response = $request->failOnError(true)->port(8080)->head();
 	}
 }
