@@ -38,7 +38,7 @@
 // You can also print the object to see response formatted.
 // print (new Http\Request())->setOpt(CURLOPT_URL, "http://rehhoff.me")->verbose()->head();
 
-class HttpRequestTest extends PHPUnit_Framework_TestCase {
+class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	public function setUp() {
 
 	}
