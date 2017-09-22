@@ -265,11 +265,12 @@ namespace Http {
 		/**
 		* Tells cURL if it should fail upon error, resulting in an exception being thrown
 		* Returns current setting value.
-		* @return (bool)
+		* @return (mixed)
 		*/
 		public function failOnError($fail = null) {
 			if(is_bool($fail) === true) {
 				$this->setOption(CURLOPT_FAILONERROR, $fail);
+				return $this;
 			}
 
 			return $this->getOption(CURLOPT_FAILONERROR);
