@@ -1,4 +1,12 @@
 #Changelog#
+v2.3
+- Added a new Digest authentication test  
+- Added (hopefully) proper cookie test cases  
+- Added a new parameter $password to Http\Request::authorize();  
+- Removed an unneccessary if statement  
+- Add a new helper/alias method Http\Request::authenticate(); does the same as authorize()  
+- Using a cookiejar can now be disabled.
+
 v2.2.0  
 - Seperated classes in Http\ namespace  
 - Removed incomplete tests  

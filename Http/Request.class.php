@@ -41,7 +41,7 @@ namespace Http {
 		*/
 		public function __construct($url = null) {
 			$this->curl = curl_init();
-			$this->cookiejar = tempnam(sys_get_temp_dir(), "HttpRequest-Cookiejar");
+			$this->cookiejar = tempnam(sys_get_temp_dir(), "/HttpRequestCookiejar");
 
 			$this->options = [
 				CURLOPT_RETURNTRANSFER => true,
@@ -96,9 +96,7 @@ namespace Http {
 				$this->setOption(CURLOPT_HTTPGET, true);
 			} elseif($method !== false) {
 				$this->setOption(CURLOPT_CUSTOMREQUEST, $method);
-				if($data !== false) {
-					$this->setOption(CURLOPT_POSTFIELDS, $data);
-				}
+				$this->setOption(CURLOPT_POSTFIELDS, $data);
 			}
 
 			$this->headerHandle = fopen("php://temp", "rw+");
@@ -106,10 +104,14 @@ namespace Http {
 			$this->setOption(CURLOPT_HTTPHEADER, $this->headers);
 			$this->setOption(CURLOPT_TIMEOUT, $timeout);
 			$this->setOption(CURLOPT_WRITEHEADER, $this->headerHandle);
-			$this->setOption(CURLOPT_COOKIEJAR, $this->cookiejar); // Store recieved cookies here
-			
+
 			// If there is any stored cookies, use the assigned cookiejar
-			if(filesize($this->cookiejar) > 0) {
+			if((bool) $this->cookiejar !== false) {
+				if(fopen($this->cookiejar, "a+") === false) {
+					throw new Exception("The cookiejar we were given could not not be opened.");
+				}
+
+				$this->setOption(CURLOPT_COOKIEJAR, $this->cookiejar);
 				$this->setOption(CURLOPT_COOKIEFILE, $this->cookiejar);
 			}
 
@@ -252,11 +254,11 @@ namespace Http {
 		* @since 1.4
 		*/
 		public function cookiejar($filepath) {
-			if(is_file($filepath) === false && is_string($filepath) === false) {
+			/* if(is_file($filepath) === false && is_string($filepath) === false) {
 				throw new BadRequestException("Http\Request::cookiejar Expects filepath to be of type file. ".gettype($filepath)." was given.");
 			} else if(fopen($filepath, "w+") === false) {
 				throw new BadRequestException("Unable to create new cookiejar '".$filepath."'");
-			}
+			} */
 
 			$this->cookiejar = $filepath;
 			return $this;
@@ -301,16 +303,26 @@ namespace Http {
 
 		/**
 		* A string to use as authorization for this request.
-		* @param (string) $usrpwd
-		* 	A combination of username and password
-		*	Typically in the format username:password
+		* @param (string) $username The username to use
+		* @param (string) $password The password that accompanies the username
 		* @param (int) $authType The HTTP authentication method(s) to use
 		* @return (object)
 		*/
-		public function authorize($usrpwd, $authType = CURLAUTH_BASIC) {
+		public function authorize($username, $password, $authType = CURLAUTH_ANY) {
 			$this->setOption(CURLOPT_HTTPAUTH, $authType);
-			$this->setOption(CURLOPT_USERPWD, $usrpwd);
+			$this->setOption(CURLOPT_USERPWD, $username.":".$password);
 			return $this;
+		}
+
+		/**
+		* Alias/Helper method for the above.
+		* @param (string) $username The username to use
+		* @param (string) $password The password that accompanies the username
+		* @param (int) $authType The HTTP authentication method(s) to use
+		* @return (object)
+		*/
+		public function authenticate($username, $password, $authType = CURLAUTH_ANY) {
+			return $this->authorize($username, $password, $authType);
 		}
 
 		/**

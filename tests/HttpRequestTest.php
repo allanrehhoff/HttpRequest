@@ -100,6 +100,32 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
+	* Tests cookies can be set and parsed accordingly.
+	* @author Allan Rehhoff
+	*/
+	public function testCanRecieveCookies() {
+		$cookiejar = dirname(__FILE__)."/cookiejar";
+
+		$req = new \Http\Request("https://httpbin.org/cookies/set?name1=value1&value2=value2&value3=value3");
+		$req->cookiejar($cookiejar);
+		$response = $req->get();
+
+		$this->assertNotEmpty($response->getHeaders("Set-Cookie"));
+	}
+
+	/**
+	* Because it would appear that cookies are only written to the cookiejar once the object is destroyed.
+	* We'll check in a seperate test, that this is not empty yet..
+	* @author Allan Rehhoff
+	*/
+	public function testCookiejarIsNotEmpty() {
+		$cookiejar = dirname(__FILE__)."/cookiejar";
+		$this->assertGreaterThan(0, filesize($cookiejar));
+
+		unlink($cookiejar);
+	}
+
+	/**
 	* Quick test that we get a useful object from an XML response
 	* @author Allan Rehhoff
 	*/
@@ -229,14 +255,37 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 		$u = "john";
 		$p = "doe";
 
-		$req = new Http\Request("https://httpbin.org/hidden-basic-auth/".$u.'/'.$p);
-		$req->authorize($u.':'.$p, CURLAUTH_BASIC);
+		$req = new Http\Request("https://httpbin.org/basic-auth/".$u.'/'.$p);
+		$req->authorize($u, $p);
 		$response = $req->get();
 
 		$this->assertEquals(200, $response->getCode());
 
 		$response = $response->asObject();
 		$this->assertTrue($response->authenticated);
+	}
+
+	/**
+	* I cannot guarantee that this will ever work...
+	* @author Allan Rehhoff
+	*/
+	public function testDigestAuth() {
+		$qop = "auth";
+		$u = "john";
+		$p = "wayne";
+
+		$url = "https://httpbin.org/digest-auth/".$qop."/".$u."/".$p."/MD5/never";
+
+		try {
+			$request = new \Http\Request($url);
+			$request->verbose();
+			$request->authorize("john", "wayne");
+			$response = $request->get();
+
+			$this->assertTrue($response->isSuccess());
+		} catch(Exception $e) {
+			$this->fail($e->getMessage());
+		}
 	}
 
 	/**

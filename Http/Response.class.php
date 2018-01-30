@@ -17,29 +17,29 @@ namespace Http {
 			// And parse the headers for a client to use.
 			rewind($this->request->headerHandle); 
 			$this->rawHeaders = rtrim(stream_get_contents($this->request->headerHandle), "\r\n");
-			$headersArray = array_filter(explode("\r\n", $this->rawHeaders));
 			fclose($this->request->headerHandle);
 
-			foreach($headersArray as $i => $line) {
-				if ($i === 0) {
-					$this->responseHeaders['Http-Code'] = $line;
-				} else {
-					$header = explode(': ', $line);
+			$headersArray = array_filter(explode("\r\n", $this->rawHeaders));
+			$this->responseHeaders = $this->parseHeaders($this->rawHeaders);
 
-					if (isset($header[1])) {
-						$this->responseHeaders[$header[0]] = trim($header[1]);
-					} else {
-						$this->responseHeaders[] = trim($header[0]);
-					}
+			/*
+			foreach($headersArray as $i => $line) {
+				$header = explode(': ', $line);
+
+				if (isset($header[1])) {
+					$this->responseHeaders[$header[0]] = trim($header[1]);
+				} else {
+					$this->responseHeaders[] = trim($header[0]);
 				}
 			}
+			*/
 
 			if(is_resource($this->request->verbose)) {
 				rewind($this->request->verbose); //@todo: Why do I need this, I'm still wondering...
 				$verboseContent = stream_get_contents($this->request->verbose);
 
 				$this->rawHeaders .= $verboseContent;
-				$this->responseHeaders["verbosity"] = explode("\n", $verboseContent);
+				$this->responseHeaders["Verbosity"] = explode("\n", $verboseContent);
 				unset($this->request->verbose);
 			}
 		}
@@ -92,6 +92,45 @@ namespace Http {
 		}
 
 		/**
+		* Herein lies deep and dark magic. Please do not try to optimize this f***er
+		* Attempts to use the pecl_http extension at first, fallbacks to mimic the behaviour of the needed function.
+		* @param (string) $rawHeaders the raw header reponse
+		* @return (array) The parsed headers.
+		*/
+		public function parseHeaders($rawHeaders) {
+			if(function_exists("http_parse_headers")) {
+				$headers = http_parse_headers($rawHeaders);
+			} else {
+				$headers = array();
+				$key = '';
+
+				foreach(explode("\n", $rawHeaders) as $i => $h) {
+					$h = explode(':', $h, 2);
+
+					if (isset($h[1])) {
+						if (!isset($headers[$h[0]])) {
+							$headers[$h[0]] = trim($h[1]);
+						} elseif (is_array($headers[$h[0]])) {
+							$headers[$h[0]] = array_merge($headers[$h[0]], array(trim($h[1])));
+						} else {
+							$headers[$h[0]] = array_merge(array($headers[$h[0]]), array(trim($h[1])));
+						}
+
+						$key = $h[0];
+					} else {
+						if (substr($h[0], 0, 1) == "\t") {
+							$headers[$key] .= "\r\n\t".trim($h[0]);
+						} elseif (!$key) {
+							$headers[0] = trim($h[0]);
+						}
+					}
+				}
+			}
+
+			return $headers;
+		}
+
+		/**
 		* Returns parsed header values.
 		* If header is given returns that headers value.
 		* Otherwise all response headers is returned.
@@ -118,6 +157,12 @@ namespace Http {
 				return isset($this->responseHeaders["Set-Cookie"][$cookie]) ? $this->responseHeaders["Set-Cookie"][$cookie] : null;
 			}
 
+			return $this->responseHeaders["Set-Cookie"];
+		}
+
+		public function getCookies() {
+			print_r($this->responseHeaders);
+			exit;
 			return $this->responseHeaders["Set-Cookie"];
 		}
 
