@@ -260,12 +260,6 @@ namespace Http {
 		* @since 1.4
 		*/
 		public function cookiejar($filepath) {
-			/* if(is_file($filepath) === false && is_string($filepath) === false) {
-				throw new BadRequestException("Http\Request::cookiejar Expects filepath to be of type file. ".gettype($filepath)." was given.");
-			} else if(fopen($filepath, "w+") === false) {
-				throw new BadRequestException("Unable to create new cookiejar '".$filepath."'");
-			} */
-
 			$this->cookiejar = $filepath;
 			return $this;
 		}
