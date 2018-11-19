@@ -2,3 +2,4 @@ tests/phpunit.xml
 tests/error_log
 error_log
 examples/
+test.php
