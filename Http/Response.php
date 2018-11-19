@@ -50,7 +50,7 @@ namespace Http {
 		* @return (string)
 		*/
 		public function __toString() {
-			return  $this->rawHeaders."\r\n".$this->request->response;
+			return $this->getResponse();
 		}
 
 		/**
@@ -161,8 +161,6 @@ namespace Http {
 		}
 
 		public function getCookies() {
-			print_r($this->responseHeaders);
-			exit;
 			return $this->responseHeaders["Set-Cookie"];
 		}
 
