@@ -82,17 +82,23 @@ namespace Http {
 		}
 
 		/**
-		* The primary function of this class, performs the actual call to a specified service. Parsing the headers afterwards.
+		* The primary function of this class, performs the actual call to a specified service.
 		* @param (string) $method HTTP method to use for this request.
 		* @param (mixed) $data The full data body to transfer with this request.
 		* @param (int) $timeout Seconds this request shall last before it times out.
-		* @return object
+		* @return (object) Response
 		*/
 		public function call($method = false, $data = false, $timeout = 60) {
 			// Make sure data are sent in a correct format.
 			if($method === self::GET) {
-				$getRequestParams = ($data !== false) ? '?'.http_build_query($data, '', '&') : '';
-				$this->setUrl($this->getUrl().$getRequestParams);
+				$url =  $this->getUrl();
+
+				if($data !== false) {
+					$sign = strpos($url, '?') ? '&' : '?';
+					$url .= $sign.http_build_query($data, '', '&');
+				}
+
+				$this->setUrl($url);
 				$this->setOption(CURLOPT_HTTPGET, true);
 			} elseif($method !== false) {
 				$this->setOption(CURLOPT_CUSTOMREQUEST, $method);
