@@ -22,18 +22,6 @@ namespace Http {
 			$headersArray = array_filter(explode("\r\n", $this->rawHeaders));
 			$this->responseHeaders = $this->parseHeaders($this->rawHeaders);
 
-			/*
-			foreach($headersArray as $i => $line) {
-				$header = explode(': ', $line);
-
-				if (isset($header[1])) {
-					$this->responseHeaders[$header[0]] = trim($header[1]);
-				} else {
-					$this->responseHeaders[] = trim($header[0]);
-				}
-			}
-			*/
-
 			if(is_resource($this->request->verbose)) {
 				rewind($this->request->verbose); //@todo: Why do I need this, I'm still wondering...
 				$verboseContent = stream_get_contents($this->request->verbose);

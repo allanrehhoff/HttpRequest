@@ -1,4 +1,8 @@
 #Changelog#
+v2.4
+- Added an additional test.  
+- Now throwing exception on response codes above 300  
+
 v2.3
 - Added a new Digest authentication test  
 - Added (hopefully) proper cookie test cases  

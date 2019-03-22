@@ -100,6 +100,15 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
+	* Test that requests who does not return a successful response code fails with an exception
+	* @expectedException Http\BadRequestException
+	*/
+	public function testExceptionOnFailedRequest() {
+		$req = new \Http\Request("https://httpbin.org/status/418");
+		$response = $req->get();
+	}
+
+	/**
 	* Tests cookies can be set and parsed accordingly.
 	* @author Allan Rehhoff
 	*/

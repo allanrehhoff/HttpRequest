@@ -143,11 +143,13 @@ namespace Http {
 			$this->response = curl_exec($this->curl);
 			$this->curlInfo = curl_getinfo($this->curl);
 
-			if($this->response === false) {
+			$response = new Response($this);
+
+			if($this->response === false || $response->isSuccess() === false) {
 				throw new BadRequestException(curl_errno($this->curl).": ".curl_error($this->curl), curl_errno($this->curl));
 			}
 
-			return new Response($this);
+			return $response;
 		}
 
 		/**
