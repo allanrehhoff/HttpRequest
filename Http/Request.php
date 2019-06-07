@@ -145,7 +145,7 @@ namespace Http {
 
 			$response = new Response($this);
 
-			if($this->response === false || $response->isSuccess() === false) {
+			if(curl_errno($this->curl) != CURLE_OK || $response->isSuccess() === false) {
 				throw new BadRequestException(curl_errno($this->curl).": ".curl_error($this->curl), curl_errno($this->curl));
 			}
 
