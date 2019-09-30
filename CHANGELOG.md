@@ -1,5 +1,8 @@
 #Changelog#
 v2.4
+- Added method to allow http error suppression  
+
+v2.4
 - Added an additional test.  
 - Now throwing exception on response codes above 300  
 

@@ -28,6 +28,8 @@ namespace Http {
 		private $headers = [];
 		private $options = [];
 
+		private $suppressErrors = false;
+
 		const GET = "GET";
 		const POST = "POST";
 		const HEAD = "HEAD";
@@ -145,8 +147,10 @@ namespace Http {
 
 			$response = new Response($this);
 
-			if(curl_errno($this->curl) != CURLE_OK || $response->isSuccess() === false) {
-				throw new BadRequestException(curl_errno($this->curl).": ".curl_error($this->curl), curl_errno($this->curl));
+			if($this->suppressErrors === false) {
+				if(curl_errno($this->curl) != CURLE_OK || $response->isSuccess() === false) {
+					throw new BadRequestException(curl_errno($this->curl).": ".curl_error($this->curl), curl_errno($this->curl));
+				}
 			}
 
 			return $response;
@@ -325,6 +329,18 @@ namespace Http {
 		*/
 		public function authenticate($username, $password, $authType = CURLAUTH_ANY) {
 			return $this->authorize($username, $password, $authType);
+		}
+
+		/**
+		* Suppress HTTP exception being thrown when the HTTP code is above 400
+		* only use this if you're manually going to check for errors
+		* @param (boolean) $setting Set error suppression to true/false
+		* @return (object)
+		* @since 2.5
+		*/
+		public function suppressErrors($setting) {
+			$this->suppressErrors = $setting;
+			return $this;
 		}
 
 		/**
