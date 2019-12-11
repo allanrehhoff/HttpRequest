@@ -78,7 +78,7 @@ namespace Http {
 				array_unshift($params, $this->curl);
 				call_user_func_array("curl_".$function, $params);
 			} else {
-				throw new BadRequestException($function." is not a valid cURL function. Invoked by Http\Request::__call()");
+				throw new CurlException($function." is not a valid cURL function. Invoked by Http\Request::__call()");
 			}
 			return $this;
 		}
@@ -145,15 +145,13 @@ namespace Http {
 			$this->response = curl_exec($this->curl);
 			$this->curlInfo = curl_getinfo($this->curl);
 
-			$response = new Response($this);
-
 			if($this->suppressErrors === false) {
-				if(curl_errno($this->curl) != CURLE_OK || $response->isSuccess() === false) {
-					throw new BadRequestException(curl_errno($this->curl).": ".curl_error($this->curl), curl_errno($this->curl));
+				if(curl_errno($this->curl) != CURLE_OK) {
+					throw new CurlException(curl_errno($this->curl).": ".curl_error($this->curl), curl_errno($this->curl));
 				}
 			}
 
-			return $response;
+			return new Response($this);
 		}
 
 		/**
@@ -262,7 +260,6 @@ namespace Http {
 		* This is automatically done by this class is destructed.
 		* @param (string) $filepath
 		* @return (object)
-		* @throws Http\BadRequestException
 		* @since 1.4
 		*/
 		public function cookiejar($filepath) {
@@ -338,7 +335,7 @@ namespace Http {
 		* @return (object)
 		* @since 2.5
 		*/
-		public function suppressErrors($setting) {
+		public function suppressErrors($setting = true) {
 			$this->suppressErrors = $setting;
 			return $this;
 		}

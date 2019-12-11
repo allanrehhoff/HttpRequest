@@ -101,11 +101,11 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 
 	/**
 	* Test that requests who does not return a successful response code fails with an exception
-	* @expectedException Http\BadRequestException
 	*/
-	public function testExceptionOnFailedRequest() {
+	public function testFailedRequest() {
 		$req = new \Http\Request("https://httpbin.org/status/418");
 		$response = $req->get();
+		$this->assertFalse($response->isSuccess());
 	}
 
 	/**
@@ -239,16 +239,17 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 			$numRedirs = 10;
 			$req = new Http\Request("https://httpbin.org/redirect/".$numRedirs);
 			$req->get()->getResponse();
-		} catch(\Http\BadRequestException $e) {
+		} catch(\Http\CurlException $e) {
 			$this->assertEquals(CURLE_TOO_MANY_REDIRECTS, $e->getCode());
 			return;
 		}
-		$this->fail("Expected BadRequestException exception [Maximum (5) redirects followed] was not thrown.");
+
+		$this->fail("Expected CurlException exception [Maximum (5) redirects followed] was not thrown.");
 	}
 
 	/**
 	* Test invalid http codes are handled
-	* @expectedException Http\BadRequestException
+	* @expectedException Http\CurlException
 	* @author Allan Rehhoff
 	*/
 	public function testIsInvalidHttpCode() {
@@ -349,7 +350,7 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 
 	/**
 	* Test we can do requests on a non-standard port
-	* @expectedException Http\BadRequestException
+	* @expectedException Http\CurlException
 	* @author Allan Rehhoff
 	*/
 	public function testRequestOnDifferentPort() {

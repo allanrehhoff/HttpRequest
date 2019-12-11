@@ -48,12 +48,12 @@ namespace Http {
 		*
 		* @param (string) $opt An index from curl_getinfo() returned array.
 		* @see http://php.net/manual/en/function.curl-getinfo.php
-		* @throws BadRequestException
+		* @throws CurlException
 		* @return (mixed)
 		*/
 		public function getInfo($opt = false) {
 			if(empty($this->request->curlInfo)) {
-				throw new BadRequestException("A cURL session has yet to be performed.");
+				throw new CurlException("A cURL session has yet to be performed.");
 			}
 
 			if($opt !== false) {
@@ -158,7 +158,7 @@ namespace Http {
 		*/
 		public function getResponse() {
 			if($this->request->response === null) {
-				throw new BadRequestException("Perform a request before accessing response data.");
+				throw new CurlException("Perform a request before accessing response data.");
 			}
 
 			return $this->request->response;
