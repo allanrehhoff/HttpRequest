@@ -1,46 +1,7 @@
 <?php
-// Simple example on how to authorize against MailChimps API
-// $req = new Http\Request("https://<dc>.api.mailchimp.com/3.0/lists");
-// $req->authorize("apikey:<your-api-key>");
-// $req->call(Http\Request::GET);
-
-// Simple way to get the content of a webpage
-// print (new Http\Request("http://rehhoff.me"))->get()->getResponse();
-// use "->setHeader($headernane, $headervalue);" before ->get() to provide additional headers
-
-// Or check the headers return by a server
-// $req = (new Http\Request("http://rehhoff.me"))->head()->getResponseHeaders();
-// Why not set a timeout now that we are at it.
-// $req = (new Http\Request("http://rehhoff.me"))->head(10)->getResponseHeaders();
-
-// You should also be able to use an unsupported HTTP Request.
-// $req = (new Http\Request("http://rehhoff.me/help-for-example"))->call("OPTIONS")->getResponse();
-
-// Example on how to add a new subscriber to your mailchimp list.
-// $subscriber = json_encode( array(
-// 	"email_address" => $email,
-// 	"status" => "subscribed",
-// 	"merge_fields" => array(
-// 		"FNAME" => $firstname,
-// 		"LNAME" => $lastname
-// 	) ) );
-// 
-// $req = new Http\Request("https://<dc>.api.mailchimp.com/3.0/lists/<list-id>/members");
-// $req->authorize("apikey:<your-api-key>");
-// $req->post($subscriber, 15); // Second paramter set's timeout.
-
-// At some point you might also want to debug the request
-// print (new Http\Request("http://rehhoff.me"))->verbose()->head()->getResponseHeaders();
-
-// $request->getInfo("http_code"); Will return an integer representing the HTTP status of the request performed.
-// $request->getResponseHeader("http_code"); Will return the header string containing the status code.
-//
-// You can also print the object to see response formatted.
-// print (new Http\Request())->setOpt(CURLOPT_URL, "http://rehhoff.me")->verbose()->head();
-
 class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	public function setUp() {
-
+		
 	}
 
 	/**

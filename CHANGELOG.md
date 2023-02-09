@@ -1,4 +1,11 @@
 #Changelog#
+v3.0
+- Adding return types to methods.  
+- Fixing docblock syntaxes.  
+- \Http\Request now returns self
+- Added public method \Http\Request::getResponse();
+- Added public method \Http\Response::asRaw();
+
 v2.4
 - Added method to allow http error suppression  
 

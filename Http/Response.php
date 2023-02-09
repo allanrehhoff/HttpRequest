@@ -11,7 +11,7 @@ namespace Http {
 		private $responseHeaders = [];
 		public $xmlErrors = [];
 
-		public function __construct(\Http\Request $request) {
+		public function __construct(Request $request) {
 			$this->request = $request;
 
 			// And parse the headers for a client to use.
@@ -35,10 +35,10 @@ namespace Http {
 		/**
 		* Gives the raw response returned by remote server.
 		* @since 1.2
-		* @return (string)
+		* @return string
 		*/
 		public function __toString() {
-			return $this->getResponse();
+			return $this->asRaw();
 		}
 
 		/**
@@ -46,10 +46,10 @@ namespace Http {
 		* If index is given, returns its value, NULL if index is undefined.
 		* Otherwise, returns an associative array of all available values.
 		*
-		* @param (string) $opt An index from curl_getinfo() returned array.
+		* @param string $opt An index from curl_getinfo() returned array.
 		* @see http://php.net/manual/en/function.curl-getinfo.php
 		* @throws CurlException
-		* @return (mixed)
+		* @return mixed
 		*/
 		public function getInfo($opt = false) {
 			if(empty($this->request->curlInfo)) {
@@ -73,7 +73,7 @@ namespace Http {
 
 		/**
 		* Finds out whether a request was successful or not.
-		* @return (bool)
+		* @return bool
 		*/
 		public function isSuccess() {
 			return $this->getCode() < 400;
@@ -82,14 +82,14 @@ namespace Http {
 		/**
 		* Herein lies deep and dark magic. Please do not try to optimize this f***er
 		* Attempts to use the pecl_http extension at first, fallbacks to mimic the behaviour of the needed function.
-		* @param (string) $rawHeaders the raw header reponse
-		* @return (array) The parsed headers.
+		* @param string $rawHeaders the raw header reponse
+		* @return array The parsed headers.
 		*/
-		public function parseHeaders($rawHeaders) {
+		public function parseHeaders($rawHeaders) : array {
 			if(function_exists("http_parse_headers")) {
 				$headers = http_parse_headers($rawHeaders);
 			} else {
-				$headers = array();
+				$headers = [];
 				$key = '';
 
 				foreach(explode("\n", $rawHeaders) as $i => $h) {
@@ -99,9 +99,9 @@ namespace Http {
 						if (!isset($headers[$h[0]])) {
 							$headers[$h[0]] = trim($h[1]);
 						} elseif (is_array($headers[$h[0]])) {
-							$headers[$h[0]] = array_merge($headers[$h[0]], array(trim($h[1])));
+							$headers[$h[0]] = array_merge($headers[$h[0]], [trim($h[1])]);
 						} else {
-							$headers[$h[0]] = array_merge(array($headers[$h[0]]), array(trim($h[1])));
+							$headers[$h[0]] = array_merge([$headers[$h[0]]], [trim($h[1])]);
 						}
 
 						$key = $h[0];
@@ -123,8 +123,8 @@ namespace Http {
 		* If header is given returns that headers value.
 		* Otherwise all response headers is returned.
 		* 
-		* @param (string) $header Name of the header for which to get the value
-		* @return (mixed)
+		* @param string $header Name of the header for which to get the value
+		* @return mixed
 		*/
 		public function getHeaders($header = false) {
 			if($header !== false) {
@@ -137,10 +137,10 @@ namespace Http {
 		/**
 		* Get cookies set by the remote server for the performed request, in case a cookiejar wasn't utilized.
 		* @since 1.2
-		* @param (string) $cookie Name of the cookie for which to retrieve details, null if it doesn't exist, ommit to get all cookies.
-		* @return (array)
+		* @param string $cookie Name of the cookie for which to retrieve details, null if it doesn't exist, ommit to get all cookies.
+		* @return array
 		*/
-		public function getCookie($cookie = false) {
+		public function getCookie($cookie = false) : array {
 			if($cookie !== false) {
 				return isset($this->responseHeaders["Set-Cookie"][$cookie]) ? $this->responseHeaders["Set-Cookie"][$cookie] : null;
 			}
@@ -154,41 +154,41 @@ namespace Http {
 
 		/**
 		* Get the request response text without the headers.
-		* @return (string)
+		* @return string
 		*/
-		public function getResponse() {
-			if($this->request->response === null) {
+		public function asRaw() : string {
+			if($this->request->returndata === null) {
 				throw new CurlException("Perform a request before accessing response data.");
 			}
 
-			return $this->request->response;
+			return $this->request->returndata;
 		}
 
 		/**
 		* Decodes and returns an object, assumes HTTP Response is JSON
-		* @return (object)
+		* @return \stdClass
 		*/
-		public function asObject() {
-			return json_decode($this->getResponse());
+		public function asObject() : \stdClass {
+			return json_decode($this->asRaw());
 		}
 
 		/**
 		* Decodes and returns an associative array, assumes the HTTP Response is JSON
-		* @return (array)
+		* @return array
 		*/
-		public function asArray() {
-			return json_decode($this->getResponse(), true);
+		public function asArray() : array {
+			return json_decode($this->asRaw(), true);
 		}
 
 		/**
 		* Returns a SimpleXML object with containing the response content.
 		* After calling any potential xml error will be available for inspection in the $xmlErrors property.
-		* @param (bool) $useErrors Toggle xml errors supression. Please be advised that setting this to true will also clear any previous XML errors in the buffer.
-		* @return (object)
+		* @param bool $useErrors Toggle xml errors supression. Please be advised that setting this to true will also clear any previous XML errors in the buffer.
+		* @return \SimpleXMLElement
 		*/
-		public function asXml($useErrors = false) {
+		public function asXml($useErrors = false) : \SimpleXMLElement {
 			libxml_use_internal_errors($useErrors);
-			$xml = simplexml_load_string($this->getResponse());
+			$xml = simplexml_load_string($this->asRaw());
 			if($useErrors == false) $this->xmlErrors = libxml_get_errors();
 			return $xml;
 		}

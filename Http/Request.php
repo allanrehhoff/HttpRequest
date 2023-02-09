@@ -15,14 +15,14 @@
 *
 * @author Allan Thue Rehhoff <http://rehhoff.me>
 * @version 2.1
-* @package HttpRequest
+* @package \Http\Request
 * @license WTFPL
 * {@link https://bitbucket.org/allanrehhoff/httprequest/src HttpRequest at bitbucket}
 */
 
 namespace Http {
 	class Request {
-		public $curl, $response, $verbose, $cookiejar, $headerHandle;
+		public $curl, $response, $verbose, $cookiejar, $headerHandle, $returndata;
 		public $curlInfo = [];
 		private $cookies = [];
 		private $headers = [];
@@ -39,7 +39,7 @@ namespace Http {
 
 		/**
 		* The constructor takes a single argument, the url of the host to request.
-		* @param (string) $url A fully qualified url, on which the service can be reached.
+		* @param string $url A fully qualified url, on which the service can be reached.
 		*/
 		public function __construct($url = null) {
 			$this->curl = curl_init();
@@ -68,8 +68,8 @@ namespace Http {
 
 		/**
 		* Allows usage for any curl_* functions in PHP not implemented by this class.
-		* @param (string) $function - cURL function to call without, curl_ part must be ommited.
-		* @param (array) $params - Array of arguments to pass to $function.
+		* @param string $function - cURL function to call without, curl_ part must be ommited.
+		* @param array $params - Array of arguments to pass to $function.
 		* @return object
 		* @link http://php.net/manual/en/ref.curl.php
 		*/
@@ -85,12 +85,12 @@ namespace Http {
 
 		/**
 		* The primary function of this class, performs the actual call to a specified service.
-		* @param (string) $method HTTP method to use for this request.
-		* @param (mixed) $data The full data body to transfer with this request.
-		* @param (int) $timeout Seconds this request shall last before it times out.
-		* @return (object) Response
+		* @param string $method HTTP method to use for this request.
+		* @param mixed $data The full data body to transfer with this request.
+		* @param int $timeout Seconds this request shall last before it times out.
+		* @return Request
 		*/
-		public function call($method = false, $data = false, $timeout = 60) {
+		public function call($method = false, $data = false, $timeout = 60) : Request {
 			// Make sure data are sent in a correct format.
 			if($method === self::GET) {
 				$url =  $this->getUrl();
@@ -116,7 +116,7 @@ namespace Http {
 			// If there is any stored cookies, use the assigned cookiejar
 			if((bool) $this->cookiejar !== false) {
 				if(fopen($this->cookiejar, "a+") === false) {
-					throw new Exception("The cookiejar we were given could not not be opened.");
+					throw new \Exception("The cookiejar we were given could not not be opened.");
 				}
 
 				$this->setOption(CURLOPT_COOKIEJAR, $this->cookiejar);
@@ -142,7 +142,7 @@ namespace Http {
 
 			// Finally perform the request
 			curl_setopt_array($this->curl, $this->options);
-			$this->response = curl_exec($this->curl);
+			$this->returndata = curl_exec($this->curl);
 			$this->curlInfo = curl_getinfo($this->curl);
 
 			if($this->suppressErrors === false) {
@@ -151,29 +151,31 @@ namespace Http {
 				}
 			}
 
-			return new Response($this);
+			$this->response = new Response($this);
+
+			return $this;
 		}
 
 		/**
 		* Perform the request through HTTP GET
-		* @param (mixed) $data
+		* @param mixed $data
 		* 	Parameters to send with this request, see the call method for more information on this parameter.
 		*	Naturally you should not find a need for this parameter, but it is implemented just in case the server masquarades.
 		*
-		* @param (int) $timeout - Seconds this request shall last before it times out.
-		* @return object
+		* @param int $timeout - Seconds this request shall last before it times out.
+		* @return \Http\Request
 		*/
-		public function get($data = false, $timeout = 60) {
+		public function get($data = false, $timeout = 60) : Request {
 			return $this->call(self::GET, $data, $timeout);
 		}
 
 		/**
 		* Perform the request through HTTP POST
-		* @param (mixed) $data Postfields to send with this request, see the call method for more information on this parameter
-		* @param (int) $timeout Seconds this request shall last before it times out.
-		* @return (object)
+		* @param mixed $data Postfields to send with this request, see the call method for more information on this parameter
+		* @param int $timeout Seconds this request shall last before it times out.
+		* @return Request
 		*/
-		public function post($data = false, $timeout = 60) {
+		public function post($data = false, $timeout = 60) : Request {
 			return $this->call(self::POST, $data, $timeout);
 		}
 
@@ -181,72 +183,72 @@ namespace Http {
 		* Obtain metainformation about the request without transferring the entire message-body
 		*A HEAD request does not accept post data, so the $data parameter is not available here.
 		* 
-		* @param (int) $timeout Seconds this request shall last before it times out.
-		* @return (object)
+		* @param int $timeout Seconds this request shall last before it times out.
+		* @return Request
 		*/
-		public function head($timeout = 60) {
+		public function head($timeout = 60) : Request {
 			return $this->call(self::HEAD, false, $timeout);
 		}
 
 		/**
 		* Put data through HTTP PUT.
-		* @param (mixed) $data Data to send through this request, see the call method for more information on this parameter.
-		* @param (int) $timeout Seconds this request shall last before it times out.
-		* @return (object)
+		* @param mixed $data Data to send through this request, see the call method for more information on this parameter.
+		* @param int $timeout Seconds this request shall last before it times out.
+		* @return Request
 		*/
-		public function put($data = false, $timeout = 60) {
+		public function put($data = false, $timeout = 60) : Request {
 			return $this->call(self::PUT, $data, $timeout);
 		}
 
 		/**
 		* Requests that the origin server delete the resource identified by the Request-URI.
-		* @param (mixed) $data 
+		* @param mixed $data 
 		*	When using this parameter you should consider signaling the pressence of a message body
 		*	By providing a Content-Length or Transfer-Encoding header.
 		*
-		* @param (int) $timeout - Seconds this request shall last before it times out.
+		* @param int $timeout - Seconds this request shall last before it times out.
 		*/
-		public function delete($data = false, $timeout = 60) {
+		public function delete($data = false, $timeout = 60) : Request {
 			return $this->call(self::DELETE, $data, $timeout);
 		}
 
 		/**
 		* Patch those data to the service.
-		* @param (mixed) $data - Data to send with this requst.
-		* @param (int) $timeout Seconds this request shall last before it times out.
-		* @return (object)
+		* @param mixed $data - Data to send with this requst.
+		* @param int $timeout Seconds this request shall last before it times out.
+		* @return object
 		*/
-		public function patch($data = false, $timeout = 60) {
+		public function patch($data = false, $timeout = 60) : Request {
 			return $this->call(self::PATCH, $data, $timeout);
 		}
 
 		/**
 		* Provide an additional header for this request.
-		* @param (string) $header The header to send with this request.
-		* @return (object)
+		* @param string $header The header to send with this request.
+		* @return Request
 		*/
-		public function setHeader($header) {
+		public function setHeader($header) : Request {
 			$this->headers[] = $header;
 			return $this;
 		}
 
 		/**
 		* Specifies the port to be requested upon
-		* @param (int) a port number.
-		* @return (object)
+		* @param int a port number.
+		* @return Request
 		*/
-		public function port($port) {
+		public function port($port) : Request {
 			$this->setOption(CURLOPT_PORT, $port);
 			return $this;
 		}
 
 		/**
 		* Send a cookie with this request.
-		* @param (string) $name name of the cookie
-		* @param (string) $value value of the cookie
-		* @return (object)
+		* @param string $name name of the cookie
+		* @param string $value value of the cookie
+		* @return Request
 		*/
-		public function setCookie($name, $value) {
+		public function setCookie($name, $value) : Request {
 			$this->cookies[$name] = (object) [
 				"name" => $name,
 				"value" => $value
@@ -258,11 +260,11 @@ namespace Http {
 		/**
 		* The name of a file in which to store all recieved cookies when the handle is closed, e.g. after a call to curl_close.
 		* This is automatically done by this class is destructed.
-		* @param (string) $filepath
-		* @return (object)
+		* @param string $filepath
+		* @return object
 		* @since 1.4
 		*/
-		public function cookiejar($filepath) {
+		public function cookiejar($filepath) : Request {
 			$this->cookiejar = $filepath;
 			return $this;
 		}
@@ -270,7 +272,7 @@ namespace Http {
 		/**
 		* Tells cURL if it should fail upon error, resulting in an exception being thrown
 		* Returns current setting value.
-		* @return (mixed)
+		* @return mixed
 		*/
 		public function failOnError($fail = null) {
 			if(is_bool($fail) === true) {
@@ -283,21 +285,20 @@ namespace Http {
 
 		/**
 		* Manually set a cURL option for this request.
-		* @param (int) $option The CURLOPT_XXX option to set.
-		* @param (mixed) Value for the option
-		* @return (object)
+		* @param int $option The CURLOPT_XXX option to set.
+		* @param mixed Value for the option
+		* @return Request
 		* @see http://php.net/curl_setopt
 		*/
-		public function setOption($option, $value) {
+		public function setOption($option, $value) : Request {
 			$this->options[$option] = $value;
-			//curl_setopt($this->curl, $option, $value);
 			return $this;
 		}
 
 		/**
 		* Retrieve the current value of a given cURL option
-		* @param (int) $option CURLOPT_* value to retrieve
-		* @return (mixed)
+		* @param int $option CURLOPT_* value to retrieve
+		* @return mixed
 		* @since 1.3
 		*/
 		public function getOption($option) {
@@ -306,12 +307,12 @@ namespace Http {
 
 		/**
 		* A string to use as authorization for this request.
-		* @param (string) $username The username to use
-		* @param (string) $password The password that accompanies the username
-		* @param (int) $authType The HTTP authentication method(s) to use
-		* @return (object)
+		* @param string $username The username to use
+		* @param string $password The password that accompanies the username
+		* @param int) $authType The HTTP authentication method(s) to use
+		* @return Request
 		*/
-		public function authorize($username, $password, $authType = CURLAUTH_ANY) {
+		public function authorize($username, $password, $authType = CURLAUTH_ANY) : Request {
 			$this->setOption(CURLOPT_HTTPAUTH, $authType);
 			$this->setOption(CURLOPT_USERPWD, $username.":".$password);
 			return $this;
@@ -319,32 +320,32 @@ namespace Http {
 
 		/**
 		* Alias/Helper method for the above.
-		* @param (string) $username The username to use
-		* @param (string) $password The password that accompanies the username
-		* @param (int) $authType The HTTP authentication method(s) to use
-		* @return (object)
+		* @param string $username The username to use
+		* @param string $password The password that accompanies the username
+		* @param int $authType The HTTP authentication method(s) to use
+		* @return Request
 		*/
-		public function authenticate($username, $password, $authType = CURLAUTH_ANY) {
+		public function authenticate($username, $password, $authType = CURLAUTH_ANY) : Request {
 			return $this->authorize($username, $password, $authType);
 		}
 
 		/**
 		* Suppress HTTP exception being thrown when the HTTP code is above 400
 		* only use this if you're manually going to check for errors
-		* @param (boolean) $setting Set error suppression to true/false
-		* @return (object)
+		* @param boolean $setting Set error suppression to true/false
+		* @return Request
 		* @since 2.5
 		*/
-		public function suppressErrors($setting = true) {
+		public function suppressErrors($setting = true) : Request {
 			$this->suppressErrors = $setting;
 			return $this;
 		}
 
 		/**
 		* Enable CURL verbosity, captures and pushes the output to the response headers.
-		* @return (object)
+		* @return Request
 		*/
-		public function verbose() {
+		public function verbose() : Request {
 			$this->verbose = fopen('php://temp', 'rw+');
 			$this->setOption(CURLOPT_VERBOSE, true);
 			$this->setOption(CURLOPT_STDERR, $this->verbose);
@@ -355,9 +356,9 @@ namespace Http {
 		/**
 		* Sets destination url, to which this request will be sent.
 		* @param $value a fully qualified url
-		* @return (object)
+		* @return Request
 		*/
-		public function setUrl($value) {
+		public function setUrl($value) : Request {
 			//$this->url = $value;
 			$this->setOption(CURLOPT_URL, $value);
 			return $this;
@@ -365,11 +366,20 @@ namespace Http {
 
 		/**
 		* Get the URL to be requested.
-		* @return (string)
+		* @return string
 		* @since 1.1
 		*/
-		public function getUrl() {
+		public function getUrl() : string {
 			return $this->getOption(CURLOPT_URL);
+		}
+
+		/**
+		 * Get the response object
+		 * @since 3.0
+		 * @return Response
+		 */
+		public function getResponse() : Response {
+			return $this->response;
 		}
 	}
 }
