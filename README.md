@@ -9,8 +9,20 @@
 	$request = new Http\Request("http://httpbin.org/post");
 	$response = $request->post(["foo" => "bar", "john" => "doe"]);
 
-	print_r($response->asObject()); // Assumes a valid JSON response
+	// Assumes a valid JSON response
+	print_r($response->getResponse()->asObject());
+
+	// Likewise assumes a valid JSON response
+	print_r($response->getResponse()->asArray());
+
+	// Assumes a valid XML response
+	print_r($response->getResponse()->asXML());
+
+	// ... Or if you prefer to do it all by yourself
+	print_r($response->getResponse()->asRaw());
 ```
+
+Other request methods include 'get', 'put', 'delete' and 'patch'.  
 
 You can tell cURL to fail upon error using Http\Request::failOnError($bool);
 
