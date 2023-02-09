@@ -65,9 +65,9 @@ namespace Http {
 
 		/**
 		* Returns the HTTP code represented by this reponse
-		* @return (int)
+		* @return int
 		*/
-		public function getCode() {
+		public function getCode() : int {
 			return (int) $this->getInfo("http_code");
 		}
 
@@ -75,7 +75,7 @@ namespace Http {
 		* Finds out whether a request was successful or not.
 		* @return bool
 		*/
-		public function isSuccess() {
+		public function isSuccess() : bool {
 			return $this->getCode() < 400;
 		}
 
@@ -85,7 +85,7 @@ namespace Http {
 		* @param string $rawHeaders the raw header reponse
 		* @return array The parsed headers.
 		*/
-		public function parseHeaders($rawHeaders) : array {
+		public function parseHeaders(string $rawHeaders) : array {
 			if(function_exists("http_parse_headers")) {
 				$headers = http_parse_headers($rawHeaders);
 			} else {

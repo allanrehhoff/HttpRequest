@@ -73,7 +73,7 @@ namespace Http {
 		* @return object
 		* @link http://php.net/manual/en/ref.curl.php
 		*/
-		public function __call($function, $params) {
+		public function __call(string $function, array $params) {
 			if(function_exists("curl_".$function)) {
 				array_unshift($params, $this->curl);
 				call_user_func_array("curl_".$function, $params);
@@ -90,12 +90,12 @@ namespace Http {
 		* @param int $timeout Seconds this request shall last before it times out.
 		* @return Request
 		*/
-		public function call($method = false, $data = false, $timeout = 60) : Request {
+		public function call(?string $method = null, $data = null, int $timeout = 60) : Request {
 			// Make sure data are sent in a correct format.
 			if($method === self::GET) {
 				$url =  $this->getUrl();
 
-				if($data !== false) {
+				if($data !== null) {
 					$sign = strpos($url, '?') ? '&' : '?';
 					$url .= $sign.http_build_query($data, '', '&');
 				}
@@ -165,7 +165,7 @@ namespace Http {
 		* @param int $timeout - Seconds this request shall last before it times out.
 		* @return \Http\Request
 		*/
-		public function get($data = false, $timeout = 60) : Request {
+		public function get($data = null, int $timeout = 60) : Request {
 			return $this->call(self::GET, $data, $timeout);
 		}
 
@@ -175,7 +175,7 @@ namespace Http {
 		* @param int $timeout Seconds this request shall last before it times out.
 		* @return Request
 		*/
-		public function post($data = false, $timeout = 60) : Request {
+		public function post($data = null, int $timeout = 60) : Request {
 			return $this->call(self::POST, $data, $timeout);
 		}
 
@@ -186,8 +186,8 @@ namespace Http {
 		* @param int $timeout Seconds this request shall last before it times out.
 		* @return Request
 		*/
-		public function head($timeout = 60) : Request {
-			return $this->call(self::HEAD, false, $timeout);
+		public function head(int $timeout = 60) : Request {
+			return $this->call(self::HEAD, null, $timeout);
 		}
 
 		/**
@@ -196,7 +196,7 @@ namespace Http {
 		* @param int $timeout Seconds this request shall last before it times out.
 		* @return Request
 		*/
-		public function put($data = false, $timeout = 60) : Request {
+		public function put($data = null, int $timeout = 60) : Request {
 			return $this->call(self::PUT, $data, $timeout);
 		}
 
@@ -208,7 +208,7 @@ namespace Http {
 		*
 		* @param int $timeout - Seconds this request shall last before it times out.
 		*/
-		public function delete($data = false, $timeout = 60) : Request {
+		public function delete($data = null, int $timeout = 60) : Request {
 			return $this->call(self::DELETE, $data, $timeout);
 		}
 
@@ -218,7 +218,7 @@ namespace Http {
 		* @param int $timeout Seconds this request shall last before it times out.
 		* @return object
 		*/
-		public function patch($data = false, $timeout = 60) : Request {
+		public function patch($data = null, int $timeout = 60) : Request {
 			return $this->call(self::PATCH, $data, $timeout);
 		}
 
@@ -227,7 +227,7 @@ namespace Http {
 		* @param string $header The header to send with this request.
 		* @return Request
 		*/
-		public function setHeader($header) : Request {
+		public function setHeader(string $header) : Request {
 			$this->headers[] = $header;
 			return $this;
 		}
@@ -237,7 +237,7 @@ namespace Http {
 		* @param int a port number.
 		* @return Request
 		*/
-		public function port($port) : Request {
+		public function port(int $port) : Request {
 			$this->setOption(CURLOPT_PORT, $port);
 			return $this;
 		}
@@ -248,7 +248,7 @@ namespace Http {
 		* @param string $value value of the cookie
 		* @return Request
 		*/
-		public function setCookie($name, $value) : Request {
+		public function setCookie(string $name, string $value) : Request {
 			$this->cookies[$name] = (object) [
 				"name" => $name,
 				"value" => $value
@@ -264,7 +264,7 @@ namespace Http {
 		* @return object
 		* @since 1.4
 		*/
-		public function cookiejar($filepath) : Request {
+		public function cookiejar(string $filepath) : Request {
 			$this->cookiejar = $filepath;
 			return $this;
 		}
@@ -274,13 +274,8 @@ namespace Http {
 		* Returns current setting value.
 		* @return mixed
 		*/
-		public function failOnError($fail = null) {
-			if(is_bool($fail) === true) {
-				$this->setOption(CURLOPT_FAILONERROR, $fail);
-				return $this;
-			}
-
-			return $this->getOption(CURLOPT_FAILONERROR);
+		public function failOnError(bool $fail = true) {
+			return $this->setOption(CURLOPT_FAILONERROR, $fail);
 		}
 
 		/**
@@ -290,7 +285,7 @@ namespace Http {
 		* @return Request
 		* @see http://php.net/curl_setopt
 		*/
-		public function setOption($option, $value) : Request {
+		public function setOption(int $option, $value) : Request {
 			$this->options[$option] = $value;
 			return $this;
 		}
