@@ -42,8 +42,9 @@ namespace Http {
 		* @param string $url A fully qualified url, on which the service can be reached.
 		*/
 		public function __construct($url = null) {
+			$tmpfile = tmpfile();
 			$this->curl = curl_init();
-			$this->cookiejar = tempnam(sys_get_temp_dir(), "/HttpRequestCookiejar");
+			$this->cookiejar = stream_get_meta_data($tmpfile)["uri"];
 
 			$this->options = [
 				CURLOPT_RETURNTRANSFER => true,
