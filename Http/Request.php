@@ -13,11 +13,9 @@
 *
 * Some limitations may apply because this library wraps around cURL
 *
-* @author Allan Thue Rehhoff <http://rehhoff.me>
-* @version 2.1
-* @package \Http\Request
-* @license WTFPL
-* {@link https://bitbucket.org/allanrehhoff/httprequest/src HttpRequest at bitbucket}
+* @package Http\Request
+* @license MIT
+* {@link https://github.com/allanrehhoff/httprequest HttpRequest at GitHub}
 */
 
 namespace Http {
@@ -27,8 +25,6 @@ namespace Http {
 		private $cookies = [];
 		private $headers = [];
 		private $options = [];
-
-		private $suppressErrors = false;
 
 		const GET = "GET";
 		const POST = "POST";
@@ -75,24 +71,26 @@ namespace Http {
 		* @link http://php.net/manual/en/ref.curl.php
 		*/
 		public function __call(string $function, array $params) {
-			if(function_exists("curl_".$function)) {
-				array_unshift($params, $this->curl);
-				call_user_func_array("curl_".$function, $params);
+			$function = "curl_".strtolower($function);
+			if(function_exists($function)) {
+				//array_unshift($params, $this->curl);
+				return $function($this->curl, ...$params);
 			} else {
-				throw new CurlException($function." is not a valid cURL function. Invoked by Http\Request::__call()");
+				throw new \InvalidArgumentException($function." is not a valid cURL function. Invoked by Http\Request::__call()");
 			}
+			
 			return $this;
 		}
 
 		/**
 		* The primary function of this class, performs the actual call to a specified service.
-		* @param string $method HTTP method to use for this request.
+		* Doing GET requests will append a query build from $data to the URL specified
+		* @param string $method HTTP method to use for this request, default GET.
 		* @param mixed $data The full data body to transfer with this request.
 		* @param int $timeout Seconds this request shall last before it times out.
 		* @return Request
 		*/
-		public function call(?string $method = null, $data = null, int $timeout = 60) : Request {
-			// Make sure data are sent in a correct format.
+		public function call(?string $method = self::GET, $data = null, int $timeout = 60) : Request {
 			if($method === self::GET) {
 				$url =  $this->getUrl();
 
@@ -103,7 +101,7 @@ namespace Http {
 
 				$this->setUrl($url);
 				$this->setOption(CURLOPT_HTTPGET, true);
-			} elseif($method !== false) {
+			} else {
 				$this->setOption(CURLOPT_CUSTOMREQUEST, $method);
 				$this->setOption(CURLOPT_POSTFIELDS, $data);
 			}
@@ -117,7 +115,7 @@ namespace Http {
 			// If there is any stored cookies, use the assigned cookiejar
 			if((bool) $this->cookiejar !== false) {
 				if(fopen($this->cookiejar, "a+") === false) {
-					throw new \Exception("The cookiejar we were given could not not be opened.");
+					throw new \RuntimeException("The cookiejar we were given could not not be opened.");
 				}
 
 				$this->setOption(CURLOPT_COOKIEJAR, $this->cookiejar);
@@ -146,13 +144,13 @@ namespace Http {
 			$this->returndata = curl_exec($this->curl);
 			$this->curlInfo = curl_getinfo($this->curl);
 
-			if($this->suppressErrors === false) {
-				if(curl_errno($this->curl) != CURLE_OK) {
-					throw new CurlException(curl_errno($this->curl).": ".curl_error($this->curl), curl_errno($this->curl));
-				}
-			}
-
 			$this->response = new Response($this);
+
+			if(curl_errno($this->curl) != CURLE_OK) {
+				throw new CurlError(curl_error($this->curl), curl_errno($this->curl));
+			} else if($this->response->isSuccess() !== true) {
+				throw new ClientError($this->response->getBody(), $this->response->getCode());
+			}
 
 			return $this;
 		}
@@ -271,15 +269,6 @@ namespace Http {
 		}
 
 		/**
-		* Tells cURL if it should fail upon error, resulting in an exception being thrown
-		* Returns current setting value.
-		* @return mixed
-		*/
-		public function failOnError(bool $fail = true) {
-			return $this->setOption(CURLOPT_FAILONERROR, $fail);
-		}
-
-		/**
 		* Manually set a cURL option for this request.
 		* @param int $option The CURLOPT_XXX option to set.
 		* @param mixed Value for the option
@@ -323,18 +312,6 @@ namespace Http {
 		*/
 		public function authenticate($username, $password, $authType = CURLAUTH_ANY) : Request {
 			return $this->authorize($username, $password, $authType);
-		}
-
-		/**
-		* Suppress HTTP exception being thrown when the HTTP code is above 400
-		* only use this if you're manually going to check for errors
-		* @param boolean $setting Set error suppression to true/false
-		* @return Request
-		* @since 2.5
-		*/
-		public function suppressErrors($setting = true) : Request {
-			$this->suppressErrors = $setting;
-			return $this;
 		}
 
 		/**

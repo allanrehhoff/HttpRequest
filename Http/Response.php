@@ -1,9 +1,8 @@
 <?php
 /**
 * Parses and contains all content written to the HTTP stream
-* @package HttpRequest
-* @license WTFPL
-* @author Allan Thue Rehhoff
+* @package Http\Request
+* @license MIT
 */
 namespace Http {
 	class Response {
@@ -19,7 +18,6 @@ namespace Http {
 			$this->rawHeaders = rtrim(stream_get_contents($this->request->headerHandle), "\r\n");
 			fclose($this->request->headerHandle);
 
-			$headersArray = array_filter(explode("\r\n", $this->rawHeaders));
 			$this->responseHeaders = $this->parseHeaders($this->rawHeaders);
 
 			if(is_resource($this->request->verbose)) {
@@ -38,7 +36,7 @@ namespace Http {
 		* @return string
 		*/
 		public function __toString() {
-			return $this->asRaw();
+			return $this->getBody();
 		}
 
 		/**
@@ -48,12 +46,12 @@ namespace Http {
 		*
 		* @param string $opt An index from curl_getinfo() returned array.
 		* @see http://php.net/manual/en/function.curl-getinfo.php
-		* @throws CurlException
+		* @throws CurlError
 		* @return mixed
 		*/
 		public function getInfo($opt = false) {
 			if(empty($this->request->curlInfo)) {
-				throw new CurlException("A cURL session has yet to be performed.");
+				throw new CurlError("A cURL session has yet to be performed.");
 			}
 
 			if($opt !== false) {
@@ -86,34 +84,31 @@ namespace Http {
 		* @return array The parsed headers.
 		*/
 		public function parseHeaders(string $rawHeaders) : array {
-			if(function_exists("http_parse_headers")) {
-				$headers = http_parse_headers($rawHeaders);
-			} else {
-				$headers = [];
-				$key = '';
+			$headers = [];
+			$key = '';
 
-				foreach(explode("\n", $rawHeaders) as $i => $h) {
-					$h = explode(':', $h, 2);
+			foreach(explode("\n", $rawHeaders) as $i => $h) {
+				$h = explode(':', $h, 2);
 
-					if (isset($h[1])) {
-						if (!isset($headers[$h[0]])) {
-							$headers[$h[0]] = trim($h[1]);
-						} elseif (is_array($headers[$h[0]])) {
-							$headers[$h[0]] = array_merge($headers[$h[0]], [trim($h[1])]);
-						} else {
-							$headers[$h[0]] = array_merge([$headers[$h[0]]], [trim($h[1])]);
-						}
-
-						$key = $h[0];
+				if (isset($h[1])) {
+					if (!isset($headers[$h[0]])) {
+						$headers[$h[0]] = trim($h[1]);
+					} elseif (is_array($headers[$h[0]])) {
+						$headers[$h[0]] = array_merge($headers[$h[0]], [trim($h[1])]);
 					} else {
-						if (substr($h[0], 0, 1) == "\t") {
-							$headers[$key] .= "\r\n\t".trim($h[0]);
-						} elseif (!$key) {
-							$headers[0] = trim($h[0]);
-						}
+						$headers[$h[0]] = array_merge([$headers[$h[0]]], [trim($h[1])]);
+					}
+
+					$key = $h[0];
+				} else {
+					if (substr($h[0], 0, 1) == "\t") {
+						$headers[$key] .= "\r\n\t".trim($h[0]);
+					} elseif (!$key) {
+						$headers[0] = trim($h[0]);
 					}
 				}
 			}
+			
 
 			return $headers;
 		}
@@ -156,9 +151,9 @@ namespace Http {
 		* Get the request response text without the headers.
 		* @return string
 		*/
-		public function asRaw() : string {
+		public function getBody() : string {
 			if($this->request->returndata === null) {
-				throw new CurlException("Perform a request before accessing response data.");
+				throw new \RuntimeException("Perform a request before accessing response data.");
 			}
 
 			return $this->request->returndata;
@@ -169,7 +164,7 @@ namespace Http {
 		* @return \stdClass
 		*/
 		public function asObject() : \stdClass {
-			return json_decode($this->asRaw());
+			return json_decode($this->getBody());
 		}
 
 		/**
@@ -177,7 +172,7 @@ namespace Http {
 		* @return array
 		*/
 		public function asArray() : array {
-			return json_decode($this->asRaw(), true);
+			return json_decode($this->getBody(), true);
 		}
 
 		/**
@@ -188,7 +183,7 @@ namespace Http {
 		*/
 		public function asXml($useErrors = false) : \SimpleXMLElement {
 			libxml_use_internal_errors($useErrors);
-			$xml = simplexml_load_string($this->asRaw());
+			$xml = simplexml_load_string($this->getBody());
 			if($useErrors == false) $this->xmlErrors = libxml_get_errors();
 			return $xml;
 		}

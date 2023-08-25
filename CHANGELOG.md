@@ -1,4 +1,11 @@
 #Changelog#
+v4.0
+- Removed Http\Request::suppressErrors(); method.  
+- Exception Http\CurlException replaced with Http\CurlError
+- New exception Http\ClientError.  
+- Renamed Http\Response::asRaw(); to Http\Response::getBody();
+- Refactored tests to PHP8 compatibility.  
+
 v3.0
 - Adding return types to methods.  
 - Fixing docblock syntaxes.  

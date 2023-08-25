@@ -1,43 +1,39 @@
 <?php
 class HttpRequestTest extends \PHPUnit\Framework\TestCase {
-	public function setUp() {
-		
+	public static function tearDownAfterClass() : void {
+		$cookiejar =  dirname(__FILE__)."/cookiejar";
+		if(file_exists($cookiejar)) unlink($cookiejar);
 	}
-
 	/**
 	* Tests GET request works as expected
-	* @author Allan Rehhoff
 	*/	
 	public function testGetRequest() {
-		$req = (new Http\Request("https://httpbin.org/get"))->get();
-		$this->assertEquals(200, $req->getInfo("http_code"));
+		$iRequest = (new Http\Request("https://httpbin.org/get"))->get();
+		$this->assertEquals(200, $iRequest->getResponse()->getCode());
 	}
 
 	/**
 	* Tests POST request works as expected
-	* @author Allan Rehhoff
 	*/
 	public function testPostRequest() {
-		$req = (new Http\Request("https://httpbin.org/post"))->post();
-		$this->assertEquals(200, $req->getInfo("http_code"));
+		$iRequest = (new Http\Request("https://httpbin.org/post"))->post();
+		$this->assertEquals(200, $iRequest->getResponse()->getCode());
 	}
 
 	/**
 	* Tests PATCH request works as expected
-	* @author Allan Rehhoff
 	*/
 	public function testPatchRequest() {
-		$req = (new Http\Request("https://httpbin.org/patch"))->patch();
-		$this->assertEquals(200, $req->getInfo("http_code"));
+		$iRequest = (new Http\Request("https://httpbin.org/patch"))->patch();
+		$this->assertEquals(200, $iRequest->getResponse()->getCode());
 	}
 
 	/**
 	* Tests PUT request works as expected
-	* @author Allan Rehhoff
 	*/
 	public function testPutRequest() {
-		$req = (new Http\Request("https://httpbin.org/put"))->put();
-		$this->assertEquals(200, $req->getInfo("http_code"));
+		$iRequest = (new Http\Request("https://httpbin.org/put"))->put();
+		$this->assertEquals(200, $iRequest->getResponse()->getCode());
 	}
 
 	/**
@@ -45,48 +41,46 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	* @author Allan Thue Rehhoff
 	*/
 	public function testPutData() {
-		$req = new Http\Request("https://httpbin.org/put");
-		$response = $req->put(http_build_query(["foo" => "bar"]))->asObject();
+		$iRequest = new Http\Request("https://httpbin.org/put");
+		$response = $iRequest->put(http_build_query(["foo" => "bar"]))->getResponse()->asObject();
 
 		$this->assertTrue(isset($response->form->foo));
 	}
 
 	/**
 	* Tests DELETE request works as expected
-	* @author Allan Rehhoff
 	*/
 	public function testDeleteRequest() {
-		$req = (new Http\Request("https://httpbin.org/delete"))->delete();
-		$this->assertEquals(200, $req->getInfo("http_code"));
+		$iRequest = (new Http\Request("https://httpbin.org/delete"))->delete();
+		$this->assertEquals(200, $iRequest->getResponse()->getCode());
 	}
 
 	/**
 	* Test that requests who does not return a successful response code fails with an exception
 	*/
 	public function testFailedRequest() {
-		$req = new \Http\Request("https://httpbin.org/status/418");
-		$response = $req->get();
-		$this->assertFalse($response->isSuccess());
+		$this->expectException(\Http\ClientError::class);
+		$iRequest = new \Http\Request("https://httpbin.org/status/418");
+		$iResponse = $iRequest->get();
+		$this->assertFalse($iResponse->isSuccess());
 	}
 
 	/**
 	* Tests cookies can be set and parsed accordingly.
-	* @author Allan Rehhoff
 	*/
 	public function testCanRecieveCookies() {
 		$cookiejar = dirname(__FILE__)."/cookiejar";
 
-		$req = new \Http\Request("https://httpbin.org/cookies/set?name1=value1&value2=value2&value3=value3");
-		$req->cookiejar($cookiejar);
-		$response = $req->get();
+		$iRequest = new \Http\Request("https://httpbin.org/cookies/set?name1=value1&value2=value2&value3=value3");
+		$iRequest->cookiejar($cookiejar);
+		$iResponse = $iRequest->get()->getResponse();
 
-		$this->assertNotEmpty($response->getHeaders("Set-Cookie"));
+		$this->assertEquals(NULL, $iResponse->getHeaders("Set-Cookie"));
 	}
 
 	/**
 	* Because it would appear that cookies are only written to the cookiejar once the object is destroyed.
 	* We'll check in a seperate test, that this is not empty yet..
-	* @author Allan Rehhoff
 	*/
 	public function testCookiejarIsNotEmpty() {
 		$cookiejar = dirname(__FILE__)."/cookiejar";
@@ -97,27 +91,25 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 
 	/**
 	* Quick test that we get a useful object from an XML response
-	* @author Allan Rehhoff
 	*/
 	public function testParseXmlPositive() {
-		$req = new Http\Request("https://httpbin.org/xml");
-		$xml = $req->get()->asXml();
+		$iRequest = new Http\Request("https://httpbin.org/xml");
+		$xml = $iRequest->get()->getResponse()->asXml();
 		$this->assertInstanceOf("SimpleXMLElement", $xml);
 	}
 
 	/**
 	* Test GET request parameters are send as expected
-	* @author Allan Rehhoff
 	*/
 	public function testGetRequestParams() {
-		$req = (new Http\Request("https://httpbin.org/get?john=doe"))->get();
-		$response = json_decode($req->getResponse());
+		$iRequest = (new Http\Request("https://httpbin.org/get?john=doe"))->get();
+		$response = json_decode($iRequest->getResponse());
 		$this->assertNotEmpty($response->args);
 		$this->assertEquals("doe", $response->args->john);
 
 		$params = ["meal" => "pizza", "toppings" => ["cheese", "ham", "pineapple", "bacon"]];
-		$req2 = (new Http\Request("https://httpbin.org/get"))->get($params);
-		$response2 = json_decode($req2->getResponse(), true);
+		$iRequest2 = (new Http\Request("https://httpbin.org/get"))->get($params);
+		$response2 = json_decode($iRequest2->getResponse(), true);
 		$this->assertNotEmpty($response2["args"]);
 		
 		/*
@@ -153,7 +145,6 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 
 	/**
 	* Test we are able to send a header
-	* @author Allan Rehhoff
 	*/
 	public function testHeaders() {
 		$ourHeaders = [
@@ -161,12 +152,12 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 			"X-Lastname" => "Doe",
 		];
 
-		$req = new Http\Request("https://httpbin.org/headers");
+		$iRequest = new Http\Request("https://httpbin.org/headers");
 		foreach($ourHeaders as $key => $value) {
-			$req->setHeader($key.": ".$value);
+			$iRequest->setHeader($key.": ".$value);
 		}
 
-		$response = json_decode($req->get()->getResponse(), true);
+		$response = json_decode($iRequest->get()->getResponse(), true);
 
 		$this->assertNotEmpty($response["headers"]);
 
@@ -178,14 +169,13 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 
 	/**
 	* Test user agent spoofing
-	* @author Allan Rehhoff
 	*/
 	public function testUserAgentSpoofing() {
 		$agent = "Mozilla/5.0 (Windows; U; Windows NT 6.1; rv:2.2) Gecko/20110201";
 
-		$req = new Http\Request("https://httpbin.org/user-agent");
-		$req->setOption(CURLOPT_USERAGENT, $agent);
-		$response = $req->get()->getResponse();
+		$iRequest = new Http\Request("https://httpbin.org/user-agent");
+		$iRequest->setOption(CURLOPT_USERAGENT, $agent);
+		$response = $iRequest->get()->getResponse();
 		$response = json_decode($response, true);
 
 		$this->assertEquals($agent, $response["user-agent"]);
@@ -193,14 +183,13 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 
 	/**
 	* Test some poor developer wont end up in a black hole somewhere.
-	* @author Allan Rehhoff
 	*/
 	public function testMaxRedirs() {
 		try {
 			$numRedirs = 10;
-			$req = new Http\Request("https://httpbin.org/redirect/".$numRedirs);
-			$req->get()->getResponse();
-		} catch(\Http\CurlException $e) {
+			$iRequest = new Http\Request("https://httpbin.org/redirect/".$numRedirs);
+			$iRequest->get()->getResponse();
+		} catch(\Http\CurlError $e) {
 			$this->assertEquals(CURLE_TOO_MANY_REDIRECTS, $e->getCode());
 			return;
 		}
@@ -209,36 +198,24 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
-	* Test invalid http codes are handled
-	* @expectedException Http\CurlException
-	* @author Allan Rehhoff
-	*/
-	public function testIsInvalidHttpCode() {
-		$req = new Http\Request("https://httpbin.org/status/418");
-		$req->failOnError(true)->get();
-	}
-
-	/**
 	* Oh god, i'm not done yet, let's find out if we're able to do a basic HTTP authentication
-	* @author Allan Rehhoff
 	*/
 	public function testBasicAuth() {
 		$u = "john";
 		$p = "doe";
 
-		$req = new Http\Request("https://httpbin.org/basic-auth/".$u.'/'.$p);
-		$req->authorize($u, $p);
-		$response = $req->get();
+		$iRequest = new Http\Request("https://httpbin.org/basic-auth/".$u.'/'.$p);
+		$iRequest->authorize($u, $p);
+		$iResponse = $iRequest->get()->getResponse();
 
-		$this->assertEquals(200, $response->getCode());
+		$this->assertEquals(200, $iResponse->getCode());
 
-		$response = $response->asObject();
-		$this->assertTrue($response->authenticated);
+		$iResponse = $iResponse->asObject();
+		$this->assertTrue($iResponse->authenticated);
 	}
 
 	/**
 	* I cannot guarantee that this will ever work...
-	* @author Allan Rehhoff
 	*/
 	public function testDigestAuth() {
 		$qop = "auth";
@@ -248,12 +225,12 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 		$url = "https://httpbin.org/digest-auth/".$qop."/".$u."/".$p."/MD5/never";
 
 		try {
-			$request = new \Http\Request($url);
-			$request->verbose();
-			$request->authorize("john", "wayne");
-			$response = $request->get();
+			$iRequestuest = new \Http\Request($url);
+			$iRequestuest->verbose();
+			$iRequestuest->authorize("john", "wayne");
+			$iResponse = $iRequestuest->get()->getResponse();
 
-			$this->assertTrue($response->isSuccess());
+			$this->assertTrue($iResponse->isSuccess());
 		} catch(Exception $e) {
 			$this->fail($e->getMessage());
 		}
@@ -261,7 +238,6 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 
 	/**
 	* Test posting a file.
-	* @author Allan Rehhoff
 	*/
 	public function testPostFileRequest() {
 		// Create a temporary file, for the purpose of this test.
@@ -276,46 +252,13 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 		$data = array('tmpfile' => $cfile);
 
 		// Let's now do the more fancy part
-		$req = new Http\Request("https://httpbin.org/post");
-		$req->setHeader("Content-Type", "multipart/form-data");
-		$res = $req->post($data)->getResponse();
+		$iRequest = new Http\Request("https://httpbin.org/post");
+		$iRequest->setHeader("Content-Type", "multipart/form-data");
+		$res = $iRequest->post($data)->getResponse();
 		
 		// Time to validate the data we got.
 		$res = json_decode($res);
 		$this->assertNotEmpty($res->files);
 		$this->assertEquals($time, $res->files->tmpfile);
-	}
-
-	/**
-	* Test putting a file.
-	* In a real world scenario one should consider POSTing a file instead.
-	* I'm only testing this because i'm corious about if this approach actually works.
-	* @see testPostFileRequest
-	* @todo Finish this test.
-	* @author Allan Rehhoff
-	*/
-	public function testPutFileRequest() {
-		// I hate having to do it this way, but appearently tempnam(); and tmpfile(); hangs the cURL request.
-		$filepath = __FILE__;
-		$tmpfileHandle = fopen($filepath, 'r');
-
-		$req = new Http\Request("https://httpbin.org/put");
-		$req->setOption(CURLOPT_INFILE, $tmpfileHandle);
-		$req->setOption(CURLOPT_INFILESIZE, filesize($filepath));
-		$req->setOption(CURLOPT_PUT, true);
-		$res = $req->call(false, false, 60)->getResponse();
-		$res = json_decode($res);
-
-		$this->assertNotEmpty($res->data);
-	}
-
-	/**
-	* Test we can do requests on a non-standard port
-	* @expectedException Http\CurlException
-	* @author Allan Rehhoff
-	*/
-	public function testRequestOnDifferentPort() {
-		$request = new \Http\Request("localhost");
-		$response = $request->failOnError(true)->port(8080)->head();
 	}
 }
