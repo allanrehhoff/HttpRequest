@@ -72,8 +72,8 @@ namespace Http {
 		*/
 		public function __call(string $function, array $params) {
 			$function = "curl_".strtolower($function);
+
 			if(function_exists($function)) {
-				//array_unshift($params, $this->curl);
 				return $function($this->curl, ...$params);
 			} else {
 				throw new \InvalidArgumentException($function." is not a valid cURL function. Invoked by Http\Request::__call()");
