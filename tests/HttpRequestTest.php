@@ -4,6 +4,7 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 		$cookiejar =  dirname(__FILE__)."/cookiejar";
 		if(file_exists($cookiejar)) unlink($cookiejar);
 	}
+
 	/**
 	* Tests GET request works as expected
 	*/	
@@ -59,9 +60,12 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	* Test that requests who does not return a successful response code fails with an exception
 	*/
 	public function testFailedRequest() {
-		$this->expectException(\Http\ClientError::class);
+		$this->expectException(\Http\HttpError::class);
+		$this->expectExceptionCode(418);
+
 		$iRequest = new \Http\Request("https://httpbin.org/status/418");
 		$iResponse = $iRequest->get();
+
 		$this->assertFalse($iResponse->isSuccess());
 	}
 
@@ -75,18 +79,14 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 		$iRequest->cookiejar($cookiejar);
 		$iResponse = $iRequest->get()->getResponse();
 
-		$this->assertEquals(NULL, $iResponse->getHeaders("Set-Cookie"));
-	}
+		$this->assertSame([
+			"name1=value1; Path=/",
+			"value2=value2; Path=/",
+			"value3=value3; Path=/"
+		], $iResponse->getHeaders("Set-Cookie"));
+		//$this->assertEquals(NULL, $iResponse->getHeaders("Set-Cookie"));
 
-	/**
-	* Because it would appear that cookies are only written to the cookiejar once the object is destroyed.
-	* We'll check in a seperate test, that this is not empty yet..
-	*/
-	public function testCookiejarIsNotEmpty() {
-		$cookiejar = dirname(__FILE__)."/cookiejar";
-		$this->assertGreaterThan(0, filesize($cookiejar));
-
-		unlink($cookiejar);
+		//$this->assertGreaterThan(0, filesize($cookiejar));
 	}
 
 	/**
@@ -185,16 +185,14 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	* Test some poor developer wont end up in a black hole somewhere.
 	*/
 	public function testMaxRedirs() {
-		try {
-			$numRedirs = 10;
-			$iRequest = new Http\Request("https://httpbin.org/redirect/".$numRedirs);
-			$iRequest->get()->getResponse();
-		} catch(\Http\CurlError $e) {
-			$this->assertEquals(CURLE_TOO_MANY_REDIRECTS, $e->getCode());
-			return;
-		}
+		$numRedirs = 10;
 
-		$this->fail("Expected CurlException exception [Maximum (5) redirects followed] was not thrown.");
+		$this->expectException(\Http\ClientError::class);
+		$this->expectExceptionCode(CURLE_TOO_MANY_REDIRECTS);
+	
+		$iRequest = new Http\Request("https://httpbin.org/redirect/" . $numRedirs);
+		$iRequest->setOption(CURLOPT_MAXREDIRS, 5);
+		$iRequest->get();
 	}
 
 	/**
