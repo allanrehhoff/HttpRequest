@@ -141,15 +141,36 @@ namespace Http {
 
 			// Finally perform the request
 			curl_setopt_array($this->curl, $this->options);
+
 			$this->returndata = curl_exec($this->curl);
 			$this->curlInfo = curl_getinfo($this->curl);
 
 			$this->response = new Response($this);
 
-			if(curl_errno($this->curl) != CURLE_OK) {
-				throw new CurlError(curl_error($this->curl), curl_errno($this->curl));
+			curl_close($this->curl);
+ 
+			// PHP 8.0.0 > compat
+			// as of PHP8 curl_close has no effect
+			// causing cookiejars to not be flushed
+			// forcing a new connection circumvents
+			$this->curl = null;
+			$this->curl = curl_init();
+
+			if($this->curlInfo["redirect_count"] >= $this->getOption(CURLOPT_MAXREDIRS)) {
+				throw new ClientError(sprintf(
+					"Reached maximum number of redirects (%d)",
+					$this->getOption(CURLOPT_MAXREDIRS)),
+				CURLE_TOO_MANY_REDIRECTS);
+			} else if(curl_errno($this->curl) != CURLE_OK) {
+				throw new ClientError(
+					curl_error($this->curl),
+					curl_errno($this->curl)
+				);
 			} else if($this->response->isSuccess() !== true) {
-				throw new ClientError($this->response->getBody(), $this->response->getCode());
+				throw new HttpError(
+					$this->response->getBody(),
+					$this->response->getCode()
+				);
 			}
 
 			return $this;
