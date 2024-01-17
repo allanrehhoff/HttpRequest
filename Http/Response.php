@@ -78,38 +78,54 @@ namespace Http {
 		}
 
 		/**
-		* Herein lies deep and dark magic. Please do not try to optimize this f***er
-		* Attempts to use the pecl_http extension at first, fallbacks to mimic the behaviour of the needed function.
-		* @param string $rawHeaders the raw header reponse
-		* @return array The parsed headers.
-		*/
-		public function parseHeaders(string $rawHeaders) : array {
+		 * Attempt to parse HTTP headers from raw respnose.
+		 * - headers spanning multiple lines will be returning as a single index with line breaks
+		 * - headers sent multiple times e.g Set-Cookie will be returned as an array
+		 * - regular key-value headers will be returned as-is indexed by its key.
+		 * Herein lies deep and dark magic.
+		 * @param string $rawHeaders the raw header reponse
+		 * @return array The parsed headers.
+		 */
+		function parseHeaders(string $rawHeaders): array {
 			$headers = [];
-			$key = '';
-
-			foreach(explode("\n", $rawHeaders) as $i => $h) {
-				$h = explode(':', $h, 2);
-
-				if (isset($h[1])) {
-					if (!isset($headers[$h[0]])) {
-						$headers[$h[0]] = trim($h[1]);
-					} elseif (is_array($headers[$h[0]])) {
-						$headers[$h[0]] = array_merge($headers[$h[0]], [trim($h[1])]);
+			$currentKey = '';
+		
+			foreach (explode("\n", $rawHeaders) as $headerLine) {
+				$headerParts = explode(':', $headerLine, 2);
+		
+				if (isset($headerParts[1])) {
+					// Regular headers with a key and value
+					// While RFC 7230 dictates HTTP headers are allowed to be all lowercase the first letter of each word
+					// will be capitalized in order to maintain a uniform response across all requests.
+					// \b: Word boundary anchor, asserts the position between a word character and a non-word character.
+					// \w: Shorthand for any word character (alphanumeric + underscore).
+					$headerKey = preg_replace_callback('/\b\w/', function($matches) {
+						return strtoupper($matches[0]);
+					}, trim($headerParts[0]));
+		
+					$headerValue = trim($headerParts[1]);
+		
+					if (!isset($headers[$headerKey])) {
+						// If the header key is not set, assign the value
+						$headers[$headerKey] = $headerValue;
+						$currentKey = $headerKey;
+					} elseif (is_array($headers[$headerKey])) {
+						// If the header key already exists as an array
+						// add the header value to the array
+						$headers[$headerKey][] = $headerValue;
 					} else {
-						$headers[$h[0]] = array_merge([$headers[$h[0]]], [trim($h[1])]);
+						// If the header key already exists as a single value, convert it to an array,
+						// fx. if Set-Cookie has been sent more than once.
+						$headers[$headerKey] = [$headers[$headerKey], $headerValue];
 					}
-
-					$key = $h[0];
-				} else {
-					if (substr($h[0], 0, 1) == "\t") {
-						$headers[$key] .= "\r\n\t".trim($h[0]);
-					} elseif (!$key) {
-						$headers[0] = trim($h[0]);
-					}
+				} elseif (isset($headerParts[0]) && substr($headerParts[0], 0, 1) === "\t" && $currentKey) {
+					// Multi-line headers, e.g., Set-Cookie with multiple values
+					$headers[$currentKey] .= "\r\n\t" . trim($headerParts[0]);
+				} elseif (!$currentKey) {
+					// No header key (e.g., the status line)
+					$headers[0] = trim($headerParts[0]);
 				}
 			}
-			
-
 			return $headers;
 		}
 
