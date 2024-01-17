@@ -20,11 +20,55 @@
 
 namespace Http {
 	class Request {
-		public $curl, $response, $verbose, $cookiejar, $headerHandle, $returndata;
-		public $curlInfo = [];
-		private $cookies = [];
-		private $headers = [];
-		private $options = [];
+		/**
+		 * @var null|false|\CurlHandle $curl Primary curl handle
+		 */
+		public null|false|\CurlHandle $curl;
+
+		/**
+		 * @var Response $response The response object, once request has been invoked
+		 */
+		public Response $response;
+
+		/**
+		 * @var null|resource|false $verbosityHandle Verbosity/Debug is is enabled when using a temporary file stream
+		 */
+		public mixed $verbosityHandle = null;
+
+		/**
+		 * @var null|string $cookiejar Path to the cookiejar in use, if enabled, default null
+		 */
+		public null|string $cookiejar = null;
+
+		/**
+		 * @var resource|false $headerHandle Header handle resource
+		 */
+		public mixed $headerHandle;
+
+		/**
+		 * @var string|bool $returndata Response returned by curl_exec
+		 */
+		public string|bool $returndata;
+
+		/**
+		 * @var array $curlInfo Curl info response
+		 */
+		public array $curlInfo = [];
+
+		/**
+		 * @var array $cookies Cookies to be sent with requests
+		 */
+		public array $cookies = [];
+
+		/**
+		 * @var array $headers Headers to be sent with requests
+		 */
+		public array $headers = [];
+
+		/**
+		 * @var array $options Options to be set on curl handle, e.g CURLOPT_*
+		 */
+		public array $options = [];
 
 		const GET = "GET";
 		const POST = "POST";
@@ -38,9 +82,9 @@ namespace Http {
 		* @param string $url A fully qualified url, on which the service can be reached.
 		*/
 		public function __construct($url = null) {
-			$tmpfile = tmpfile();
 			$this->curl = curl_init();
-			$this->cookiejar = stream_get_meta_data($tmpfile)["uri"];
+
+			$this->headerHandle = fopen("php://temp", "rw+");
 
 			$this->options = [
 				CURLOPT_RETURNTRANSFER => true,
@@ -70,10 +114,10 @@ namespace Http {
 		* Allows usage for any curl_* functions in PHP not implemented by this class.
 		* @param string $function - cURL function to call without, curl_ part must be ommited.
 		* @param array $params - Array of arguments to pass to $function.
-		* @return object
+		* @return mixed
 		* @link http://php.net/manual/en/ref.curl.php
 		*/
-		public function __call(string $function, array $params) {
+		public function __call(string $function, array $params): mixed {
 			$function = "curl_".strtolower($function);
 
 			if(function_exists($function)) {
@@ -89,17 +133,17 @@ namespace Http {
 		* The primary function of this class, performs the actual call to a specified service.
 		* Doing GET requests will append a query build from $data to the URL specified
 		* @param string $method HTTP method to use for this request, default GET.
-		* @param mixed $data The full data body to transfer with this request.
+		* @param null|string|array $data The full data body to transfer with this request.
 		* @param int $timeout Seconds this request shall last before it times out.
 		* @return Request
 		*/
-		public function call(?string $method = self::GET, $data = null, int $timeout = 60) : Request {
+		public function call(?string $method = self::GET, null|string|array $data = null, int $timeout = 60): Request {
 			if($method === self::GET) {
 				$url =  $this->getUrl();
 
 				if($data !== null) {
 					$sign = strpos($url, '?') ? '&' : '?';
-					$url .= $sign.http_build_query($data, '', '&');
+					$url .= $sign . http_build_query($data, '', '&');
 				}
 
 				$this->setUrl($url);
@@ -109,14 +153,12 @@ namespace Http {
 				$this->setOption(CURLOPT_POSTFIELDS, $data);
 			}
 
-			$this->headerHandle = fopen("php://temp", "rw+");
-
 			$this->setOption(CURLOPT_HTTPHEADER, $this->headers);
 			$this->setOption(CURLOPT_TIMEOUT, $timeout);
 			$this->setOption(CURLOPT_WRITEHEADER, $this->headerHandle);
 
 			// If there is any stored cookies, use the assigned cookiejar
-			if((bool) $this->cookiejar !== false) {
+			if($this->cookiejar !== null) {
 				if(fopen($this->cookiejar, "a+") === false) {
 					throw new \RuntimeException("The cookiejar we were given could not not be opened.");
 				}
@@ -181,24 +223,24 @@ namespace Http {
 
 		/**
 		* Perform the request through HTTP GET
-		* @param mixed $data
+		* @param null|string|array $data
 		* 	Parameters to send with this request, see the call method for more information on this parameter.
 		*	Naturally you should not find a need for this parameter, but it is implemented just in case the server masquarades.
 		*
 		* @param int $timeout - Seconds this request shall last before it times out.
 		* @return \Http\Request
 		*/
-		public function get($data = null, int $timeout = 60) : Request {
+		public function get(null|string|array $data = null, int $timeout = 60): Request {
 			return $this->call(self::GET, $data, $timeout);
 		}
 
 		/**
 		* Perform the request through HTTP POST
-		* @param mixed $data Postfields to send with this request, see the call method for more information on this parameter
+		* @param null|string|array $data Postfields to send with this request, see the call method for more information on this parameter
 		* @param int $timeout Seconds this request shall last before it times out.
 		* @return Request
 		*/
-		public function post($data = null, int $timeout = 60) : Request {
+		public function post(null|string|array $data = null, int $timeout = 60): Request {
 			return $this->call(self::POST, $data, $timeout);
 		}
 
@@ -209,39 +251,39 @@ namespace Http {
 		* @param int $timeout Seconds this request shall last before it times out.
 		* @return Request
 		*/
-		public function head(int $timeout = 60) : Request {
+		public function head(int $timeout = 60): Request {
 			return $this->call(self::HEAD, null, $timeout);
 		}
 
 		/**
 		* Put data through HTTP PUT.
-		* @param mixed $data Data to send through this request, see the call method for more information on this parameter.
+		* @param null|string|array $data Data to send through this request, see the call method for more information on this parameter.
 		* @param int $timeout Seconds this request shall last before it times out.
 		* @return Request
 		*/
-		public function put($data = null, int $timeout = 60) : Request {
+		public function put(null|string|array $data = null, int $timeout = 60): Request {
 			return $this->call(self::PUT, $data, $timeout);
 		}
 
 		/**
 		* Requests that the origin server delete the resource identified by the Request-URI.
-		* @param mixed $data 
+		* @param null|string|array $data 
 		*	When using this parameter you should consider signaling the pressence of a message body
 		*	By providing a Content-Length or Transfer-Encoding header.
 		*
 		* @param int $timeout - Seconds this request shall last before it times out.
 		*/
-		public function delete($data = null, int $timeout = 60) : Request {
+		public function delete(null|string|array $data = null, int $timeout = 60): Request {
 			return $this->call(self::DELETE, $data, $timeout);
 		}
 
 		/**
 		* Patch those data to the service.
-		* @param mixed $data - Data to send with this requst.
+		* @param null|string|array $data - Data to send with this requst.
 		* @param int $timeout Seconds this request shall last before it times out.
 		* @return object
 		*/
-		public function patch($data = null, int $timeout = 60) : Request {
+		public function patch(null|string|array $data = null, int $timeout = 60): Request {
 			return $this->call(self::PATCH, $data, $timeout);
 		}
 
@@ -250,7 +292,7 @@ namespace Http {
 		* @param string $header The header to send with this request.
 		* @return Request
 		*/
-		public function setHeader(string $header) : Request {
+		public function setHeader(string $header): Request {
 			$this->headers[] = $header;
 			return $this;
 		}
@@ -260,7 +302,7 @@ namespace Http {
 		* @param int a port number.
 		* @return Request
 		*/
-		public function port(int $port) : Request {
+		public function port(int $port): Request {
 			$this->setOption(CURLOPT_PORT, $port);
 			return $this;
 		}
@@ -271,7 +313,7 @@ namespace Http {
 		* @param string $value value of the cookie
 		* @return Request
 		*/
-		public function setCookie(string $name, string $value) : Request {
+		public function setCookie(string $name, string $value): Request {
 			$this->cookies[$name] = (object) [
 				"name" => $name,
 				"value" => $value
@@ -287,7 +329,7 @@ namespace Http {
 		* @return object
 		* @since 1.4
 		*/
-		public function cookiejar(string $filepath) : Request {
+		public function cookiejar(string $filepath): Request {
 			$this->cookiejar = $filepath;
 			return $this;
 		}
@@ -299,7 +341,7 @@ namespace Http {
 		* @return Request
 		* @see http://php.net/curl_setopt
 		*/
-		public function setOption(int $option, $value) : Request {
+		public function setOption(int $option, mixed $value): Request {
 			$this->options[$option] = $value;
 			return $this;
 		}
@@ -310,7 +352,7 @@ namespace Http {
 		* @return mixed
 		* @since 1.3
 		*/
-		public function getOption($option) {
+		public function getOption(int $option): mixed {
 			return $this->options[$option];
 		}
 
@@ -318,10 +360,10 @@ namespace Http {
 		* A string to use as authorization for this request.
 		* @param string $username The username to use
 		* @param string $password The password that accompanies the username
-		* @param int) $authType The HTTP authentication method(s) to use
+		* @param int $authType The HTTP authentication method(s) to use
 		* @return Request
 		*/
-		public function authorize($username, $password, $authType = CURLAUTH_ANY) : Request {
+		public function authorize(string $username, string $password, int $authType = CURLAUTH_ANY): Request {
 			$this->setOption(CURLOPT_HTTPAUTH, $authType);
 			$this->setOption(CURLOPT_USERPWD, $username.":".$password);
 			return $this;
@@ -334,7 +376,7 @@ namespace Http {
 		* @param int $authType The HTTP authentication method(s) to use
 		* @return Request
 		*/
-		public function authenticate($username, $password, $authType = CURLAUTH_ANY) : Request {
+		public function authenticate(string $username, string $password, int $authType = CURLAUTH_ANY): Request {
 			return $this->authorize($username, $password, $authType);
 		}
 
@@ -342,21 +384,20 @@ namespace Http {
 		* Enable CURL verbosity, captures and pushes the output to the response headers.
 		* @return Request
 		*/
-		public function verbose() : Request {
-			$this->verbose = fopen('php://temp', 'rw+');
+		public function verbose(): Request {
+			$this->verbosityHandle = fopen('php://temp', 'rw+');
 			$this->setOption(CURLOPT_VERBOSE, true);
-			$this->setOption(CURLOPT_STDERR, $this->verbose);
+			$this->setOption(CURLOPT_STDERR, $this->verbosityHandle);
 
 			return $this;
 		}
 
 		/**
 		* Sets destination url, to which this request will be sent.
-		* @param $value a fully qualified url
+		* @param string $value a fully qualified url
 		* @return Request
 		*/
-		public function setUrl($value) : Request {
-			//$this->url = $value;
+		public function setUrl(string $value): Request {
 			$this->setOption(CURLOPT_URL, $value);
 			return $this;
 		}
@@ -366,7 +407,7 @@ namespace Http {
 		* @return string
 		* @since 1.1
 		*/
-		public function getUrl() : string {
+		public function getUrl(): string {
 			return $this->getOption(CURLOPT_URL);
 		}
 
@@ -375,7 +416,7 @@ namespace Http {
 		 * @since 3.0
 		 * @return Response
 		 */
-		public function getResponse() : Response {
+		public function getResponse(): Response {
 			return $this->response;
 		}
 	}
