@@ -1,4 +1,10 @@
-#Changelog#
+# Changelog
+
+v4.1
+- Normalize parsed HTTP headers, e.g. 'set-cookie' as 'Set-Cookie'  
+- Compatibility with PHP > 8.0.0.  ´
+- Coding standards and maintenance update.  
+
 v4.0
 - Removed Http\Request::suppressErrors(); method.  
 - Exception Http\CurlException replaced with Http\CurlError
