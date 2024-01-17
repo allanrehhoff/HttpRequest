@@ -6,7 +6,7 @@
 	require "autoload.php";
 
 	// Assuming you have an autoloader in place.
-	$request = new Http\Request("http://httpbin.org/post");
+	$request = new \Http\Request("http://httpbin.org/post");
 	$response = $request->post(["foo" => "bar", "john" => "doe"]);
 
 	// Assumes a valid JSON response
@@ -32,10 +32,14 @@ You can tell cURL to fail upon error using Http\Request::failOnError($bool);
 	require "autoload.php";
 
 	try {
-		$iRequest = new Http\Request("https://httpbin.org/status/418");
-		$response = $iRequest->failOnError(true)->get();
-	} catch(Exception $e) {
-		// $response will be NULL
+		$iRequest = new \Http\Request("https://httpbin.org/status/418");
+		$response = $iRequest->get();
+	} catch(\Http\ClientError $e) {
+		// There was an error with the implementation that made cURL return an error
+		print $e->getCode();
+		print $e->getMessage();
+	} catch(\Http\HttpError $e) {
+		// There was an error that caused the remote to return a HTTP code >= 400
 		print $e->getCode();
 		print $e->getMessage();
 	}
