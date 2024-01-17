@@ -132,13 +132,13 @@ namespace Http {
 		/**
 		* The primary function of this class, performs the actual call to a specified service.
 		* Doing GET requests will append a query build from $data to the URL specified
-		* @param string $method HTTP method to use for this request, default GET.
+		* @param null|Method $method HTTP method to use for this request, default GET.
 		* @param null|string|array $data The full data body to transfer with this request.
 		* @param int $timeout Seconds this request shall last before it times out.
 		* @return Request
 		*/
-		public function call(?string $method = self::GET, null|string|array $data = null, int $timeout = 60): Request {
-			if($method === self::GET) {
+		public function call(null|Method $method = self::GET, null|string|array $data = null, int $timeout = 60): Request {
+			if($method === Method::GET) {
 				$url =  $this->getUrl();
 
 				if($data !== null) {
@@ -149,7 +149,7 @@ namespace Http {
 				$this->setUrl($url);
 				$this->setOption(CURLOPT_HTTPGET, true);
 			} else {
-				$this->setOption(CURLOPT_CUSTOMREQUEST, $method);
+				$this->setOption(CURLOPT_CUSTOMREQUEST, $method->value);
 				$this->setOption(CURLOPT_POSTFIELDS, $data);
 			}
 
@@ -231,7 +231,7 @@ namespace Http {
 		* @return \Http\Request
 		*/
 		public function get(null|string|array $data = null, int $timeout = 60): Request {
-			return $this->call(self::GET, $data, $timeout);
+			return $this->call(Method::GET, $data, $timeout);
 		}
 
 		/**
@@ -241,7 +241,7 @@ namespace Http {
 		* @return Request
 		*/
 		public function post(null|string|array $data = null, int $timeout = 60): Request {
-			return $this->call(self::POST, $data, $timeout);
+			return $this->call(Method::POST, $data, $timeout);
 		}
 
 		/**
@@ -252,7 +252,7 @@ namespace Http {
 		* @return Request
 		*/
 		public function head(int $timeout = 60): Request {
-			return $this->call(self::HEAD, null, $timeout);
+			return $this->call(Method::HEAD, null, $timeout);
 		}
 
 		/**
@@ -262,7 +262,7 @@ namespace Http {
 		* @return Request
 		*/
 		public function put(null|string|array $data = null, int $timeout = 60): Request {
-			return $this->call(self::PUT, $data, $timeout);
+			return $this->call(Method::PUT, $data, $timeout);
 		}
 
 		/**
@@ -274,7 +274,7 @@ namespace Http {
 		* @param int $timeout - Seconds this request shall last before it times out.
 		*/
 		public function delete(null|string|array $data = null, int $timeout = 60): Request {
-			return $this->call(self::DELETE, $data, $timeout);
+			return $this->call(Method::DELETE, $data, $timeout);
 		}
 
 		/**
@@ -284,7 +284,7 @@ namespace Http {
 		* @return object
 		*/
 		public function patch(null|string|array $data = null, int $timeout = 60): Request {
-			return $this->call(self::PATCH, $data, $timeout);
+			return $this->call(Method::PATCH, $data, $timeout);
 		}
 
 		/**
