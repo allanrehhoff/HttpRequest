@@ -57,9 +57,12 @@ namespace Http {
 		* @return void
 		*/
 		public function __destruct() {
-			curl_close($this->curl);
-			if(is_resource($this->verbose)) {
-				fclose($this->verbose);
+			if(is_resource($this->verbosityHandle)) {
+				fclose($this->verbosityHandle);
+			}
+
+			if(is_resource($this->headerHandle)) {
+				fclose($this->headerHandle);
 			}
 		}
 
