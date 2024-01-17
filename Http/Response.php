@@ -10,23 +10,24 @@ namespace Http {
 		private $responseHeaders = [];
 		public $xmlErrors = [];
 
-		public function __construct(Request $request) {
-			$this->request = $request;
+		public function __construct(Request $iRequest) {
+			$this->request = $iRequest;
+
+			$headerHandle = $this->request->headerHandle;
+			$verbosityHandle = $this->request->verbosityHandle;
 
 			// And parse the headers for a client to use.
-			rewind($this->request->headerHandle); 
-			$this->rawHeaders = rtrim(stream_get_contents($this->request->headerHandle), "\r\n");
-			fclose($this->request->headerHandle);
-
+			rewind($headerHandle); 
+			$this->rawHeaders = rtrim(stream_get_contents($headerHandle), "\r\n");
 			$this->responseHeaders = $this->parseHeaders($this->rawHeaders);
 
-			if(is_resource($this->request->verbose)) {
-				rewind($this->request->verbose); //@todo: Why do I need this, I'm still wondering...
-				$verboseContent = stream_get_contents($this->request->verbose);
+			if(is_resource($verbosityHandle)) {
+				rewind($verbosityHandle); //@todo: Why do I need this, I'm still wondering...
+				$verboseContent = stream_get_contents($verbosityHandle);
 
 				$this->rawHeaders .= $verboseContent;
 				$this->responseHeaders["Verbosity"] = explode("\n", $verboseContent);
-				unset($this->request->verbose);
+				unset($verbosityHandle);
 			}
 		}
 
@@ -49,23 +50,21 @@ namespace Http {
 		* @throws CurlError
 		* @return mixed
 		*/
-		public function getInfo($opt = false) {
-			if(empty($this->request->curlInfo)) {
-				throw new CurlError("A cURL session has yet to be performed.");
+		public function getInfo(null|string $option = null) {
+			$curlInfo = $this->request->curlInfo;
+
+			if($option !== null) {
+				return $curlInfo[$option] ?? null;
 			}
 
-			if($opt !== false) {
-				return isset($this->request->curlInfo[$opt]) ? $this->request->curlInfo[$opt] : null;
-			}
-
-			return $this->request->curlInfo;
+			return $curlInfo;
 		}
 
 		/**
 		* Returns the HTTP code represented by this reponse
 		* @return int
 		*/
-		public function getCode() : int {
+		public function getCode(): int {
 			return (int) $this->getInfo("http_code");
 		}
 
@@ -73,7 +72,7 @@ namespace Http {
 		* Finds out whether a request was successful or not.
 		* @return bool
 		*/
-		public function isSuccess() : bool {
+		public function isSuccess(): bool {
 			return $this->getCode() < 400;
 		}
 
@@ -126,6 +125,7 @@ namespace Http {
 					$headers[0] = trim($headerParts[0]);
 				}
 			}
+		
 			return $headers;
 		}
 
@@ -134,12 +134,12 @@ namespace Http {
 		* If header is given returns that headers value.
 		* Otherwise all response headers is returned.
 		* 
-		* @param string $header Name of the header for which to get the value
+		* @param null|string $header Name of the header for which to get the value
 		* @return mixed
 		*/
-		public function getHeaders($header = false) {
-			if($header !== false) {
-				return isset($this->responseHeaders[$header]) ? $this->responseHeaders[$header] : null;
+		public function getHeaders(null|string $header = null) {
+			if($header !== null) {
+				return $this->responseHeaders[$header] ?? null;
 			}
 
 			return $this->responseHeaders;
@@ -148,18 +148,22 @@ namespace Http {
 		/**
 		* Get cookies set by the remote server for the performed request, in case a cookiejar wasn't utilized.
 		* @since 1.2
-		* @param string $cookie Name of the cookie for which to retrieve details, null if it doesn't exist, ommit to get all cookies.
+		* @param null|string $cookie Name of the cookie for which to retrieve details, null if it doesn't exist, ommit to get all cookies.
 		* @return array
 		*/
-		public function getCookie($cookie = false) : array {
-			if($cookie !== false) {
-				return isset($this->responseHeaders["Set-Cookie"][$cookie]) ? $this->responseHeaders["Set-Cookie"][$cookie] : null;
+		public function getCookie(null|string $cookie = null): array {
+			if($cookie !== null) {
+				return $this->responseHeaders["Set-Cookie"][$cookie] ?? null;
 			}
 
 			return $this->responseHeaders["Set-Cookie"];
 		}
 
-		public function getCookies() {
+		/**
+		 * Return value of a given header
+		 * @return string
+		 */
+		public function getCookies(): string {
 			return $this->responseHeaders["Set-Cookie"];
 		}
 
@@ -167,7 +171,7 @@ namespace Http {
 		* Get the request response text without the headers.
 		* @return string
 		*/
-		public function getBody() : string {
+		public function getBody(): string {
 			if($this->request->returndata === null) {
 				throw new \RuntimeException("Perform a request before accessing response data.");
 			}
@@ -179,7 +183,7 @@ namespace Http {
 		* Decodes and returns an object, assumes HTTP Response is JSON
 		* @return \stdClass
 		*/
-		public function asObject() : \stdClass {
+		public function asObject(): \stdClass {
 			return json_decode($this->getBody());
 		}
 
@@ -187,7 +191,7 @@ namespace Http {
 		* Decodes and returns an associative array, assumes the HTTP Response is JSON
 		* @return array
 		*/
-		public function asArray() : array {
+		public function asArray(): array {
 			return json_decode($this->getBody(), true);
 		}
 
@@ -197,7 +201,7 @@ namespace Http {
 		* @param bool $useErrors Toggle xml errors supression. Please be advised that setting this to true will also clear any previous XML errors in the buffer.
 		* @return \SimpleXMLElement
 		*/
-		public function asXml($useErrors = false) : \SimpleXMLElement {
+		public function asXml(bool $useErrors = false): \SimpleXMLElement {
 			libxml_use_internal_errors($useErrors);
 			$xml = simplexml_load_string($this->getBody());
 			if($useErrors == false) $this->xmlErrors = libxml_get_errors();
