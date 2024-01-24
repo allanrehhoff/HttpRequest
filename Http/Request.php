@@ -6,9 +6,9 @@
 * Or read the individual method documentation for more information.
 *
 * Currently supports GET, POST, HEAD, PUT, DELETE, PATCH requests.
-* Other requests types is possible by using the ->call(); method.
+* Other requests types is possible by using the ->send(); method.
 *
-* This class implements the magic method __call(); in a way that allows you to call any curl_* function
+* This class implements the magic method __send(); in a way that allows you to call any curl_* function
 * That has not already been implemented by this class, while omitting the curl handle.
 *
 * Some limitations may apply because this library wraps around cURL
@@ -24,6 +24,11 @@ namespace Http {
 		 * @var null|false|\CurlHandle $curl Primary curl handle
 		 */
 		public null|false|\CurlHandle $curl;
+
+		/**
+		 * @var null|Method $method The HTTP request method being used
+		 */
+		public null|Method $method = null;
 
 		/**
 		 * @var Response $response The response object, once request has been invoked
@@ -134,13 +139,12 @@ namespace Http {
 
 		/**
 		 * The primary function of this class, performs the actual call to a specified service.
-		 * Doing GET requests will append a query build from $data to the URL specified
-		 * @param null|Method $method HTTP method to use for this request, default GET.
-		 * @param null|string|array $data The full data body to transfer with this request.
+		 * Doing GET requests will append a query, build from $data, to the URL specified.  
+		 * @param null|string|array $data The full data body to transfer with this request, this is only used when a Method is being used.  
 		 * @return Request
 		 */
-		public function call(null|Method $method = Method::GET, null|string|array $data = null): Request {
-			if($method === Method::GET) {
+		public function send(null|string|array $data = null): Request {
+			if($this->method === Method::GET) {
 				$url =  $this->getUrl();
 
 				if($data !== null) {
@@ -150,8 +154,8 @@ namespace Http {
 
 				$this->setUrl($url);
 				$this->setOption(CURLOPT_HTTPGET, true);
-			} else {
-				$this->setOption(CURLOPT_CUSTOMREQUEST, $method->value);
+			} else if($this->method instanceof Method) {
+				$this->setOption(CURLOPT_CUSTOMREQUEST, $this->method->value);
 				$this->setOption(CURLOPT_POSTFIELDS, $data);
 			}
 
@@ -177,9 +181,8 @@ namespace Http {
 				$numCookiesSet = count($this->cookies);
 
 				foreach($this->cookies as $cookie) {
-					$iterations++;
 					$cookieString .= $cookie->name.'='.$cookie->value;
-					if($iterations < $numCookiesSet) $cookieString .= "; ";
+					if(++$iterations < $numCookiesSet) $cookieString .= "; ";
 				}
 
 				$this->setOption(CURLOPT_COOKIE, $cookieString); 
@@ -203,7 +206,7 @@ namespace Http {
 			$this->curl = curl_init();
 
 			if($this->curlInfo["redirect_count"] >= $this->getOption(CURLOPT_MAXREDIRS)) {
-				throw new ClientError(sprintf(
+				throw new HttpError(sprintf(
 					"Reached maximum number of redirects (%d)",
 					$this->getOption(CURLOPT_MAXREDIRS)),
 				CURLE_TOO_MANY_REDIRECTS);
@@ -231,7 +234,7 @@ namespace Http {
 		 * @return \Http\Request
 		 */
 		public function get(null|string|array $data = null): Request {
-			return $this->call(Method::GET, $data);
+			return $this->setMethod(Method::GET)->send($data);
 		}
 
 		/**
@@ -240,7 +243,7 @@ namespace Http {
 		 * @return Request
 		 */
 		public function post(null|string|array $data = null): Request {
-			return $this->call(Method::POST, $data);
+			return $this->setMethod(Method::POST)->send($data);
 		}
 
 		/**
@@ -250,7 +253,7 @@ namespace Http {
 		 * @return Request
 		 */
 		public function head(): Request {
-			return $this->call(Method::HEAD);
+			return $this->setMethod(Method::HEAD)->send();
 		}
 
 		/**
@@ -258,7 +261,7 @@ namespace Http {
 		 * @return object
 		 */
 		public function options(): Request {
-			return $this->call(Method::OPTIONS);
+			return $this->setMethod(Method::OPTIONS)->send();
 		}
 
 		/**
@@ -266,7 +269,7 @@ namespace Http {
 		 * @return object
 		 */
 		public function connect(): Request {
-			return $this->call(Method::OPTIONS);
+			return $this->setMethod(Method::OPTIONS)->send();
 		}
 
 		/**
@@ -274,7 +277,7 @@ namespace Http {
 		 * @return object
 		 */
 		public function trace(): Request {
-			return $this->call(Method::OPTIONS);
+			return $this->setMethod(Method::TRACE)->send();
 		}
 
 		/**
@@ -283,7 +286,7 @@ namespace Http {
 		 * @return Request
 		 */
 		public function put(null|string|array $data = null): Request {
-			return $this->call(Method::PUT, $data);
+			return $this->setMethod(Method::PUT)->send($data);
 		}
 
 		/**
@@ -295,7 +298,7 @@ namespace Http {
 		 * @param int $timeout - Seconds this request shall last before it times out.
 		 */
 		public function delete(null|string|array $data = null): Request {
-			return $this->call(Method::DELETE, $data);
+			return $this->setMethod(Method::DELETE)->send($data);
 		}
 
 		/**
@@ -304,7 +307,7 @@ namespace Http {
 		 * @return object
 		 */
 		public function patch(null|string|array $data = null): Request {
-			return $this->call(Method::PATCH, $data);
+			return $this->setMethod(Method::PATCH)->send($data);
 		}
 
 		/**
@@ -414,10 +417,35 @@ namespace Http {
 		/**
 		 * Get the URL to be requested.
 		 * @return string
-		 * @since 1.1
 		 */
 		public function getUrl(): string {
 			return $this->getOption(CURLOPT_URL);
+		}
+
+		/**
+		 * Set the method to use for requests.
+		 * @param Method $method The method to use, can be any of:
+		 * 	- Method::GET
+		 * 	- Method::POST
+		 * 	- Method::PUT
+		 * 	- Method::PATCH
+		 * 	- Method::DELETE
+		 * 	- Method::OPTIONS
+		 * 	- Method::TRACE
+		 * 	- Method::CONNECT
+		 * @return Request
+		 */
+		public function setMethod(Method $method): Request {
+			$this->method = $method;
+			return $this;
+		}
+
+		/**
+		 * Get the method to be used for requests
+		 * @return Method
+		 */
+		public function getMethod(): Method {
+			return $this->method;
 		}
 
 		/**
