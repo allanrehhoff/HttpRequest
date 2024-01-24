@@ -1,10 +1,16 @@
 # Changelog
 
-v4.1
+v5.0
 - Normalize parsed HTTP headers, e.g. 'set-cookie' as 'Set-Cookie'  
 - Compatibility with PHP > 8.0.0.  ´
 - Coding standards and maintenance update.  
 - Using enums for HTTP request methods.  
+- Typehinting to methods and properties.  
+- Removed parameters 'timeout' from methods, use Request::setOption instead.  
+- Removed method Request::authenticate.  
+- Request::cookiejar renamed to Request::setCookiejar.  
+- Request::port renamed to Request::setPort.  
+- Request::authorization renamed to Request::setAuthorization.  
 
 v4.0
 - Removed Http\Request::suppressErrors(); method.  

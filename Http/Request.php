@@ -214,7 +214,7 @@ namespace Http {
 		}
 
 		/**
-		 * Perform the request through HTTP GET
+		 * Request a remote resource using GET as the HTTP method.
 		 * @param null|string|array $data
 		 * 	Parameters to send with this request, see the call method for more information on this parameter.
 		 *	Naturally you should not find a need for this parameter, but it is implemented just in case the server masquarades.
@@ -226,7 +226,7 @@ namespace Http {
 		}
 
 		/**
-		 * Perform the request through HTTP POST
+		 * Request a remote resource using POST as the HTTP method.
 		 * @param null|string|array $data Postfields to send with this request, see the call method for more information on this parameter
 		 * @return Request
 		 */
@@ -241,11 +241,35 @@ namespace Http {
 		 * @return Request
 		 */
 		public function head(): Request {
-			return $this->call(Method::HEAD, null);
+			return $this->call(Method::HEAD);
 		}
 
 		/**
-		 * Put data through HTTP PUT.
+		 * Request a remote resource using OPTIONS as the HTTP method.
+		 * @return object
+		 */
+		public function options(): Request {
+			return $this->call(Method::OPTIONS);
+		}
+
+		/**
+		 * Request a remote resource using CONNECT as the HTTP method.
+		 * @return object
+		 */
+		public function connect(): Request {
+			return $this->call(Method::OPTIONS);
+		}
+
+		/**
+		 * Request a remote resource using TRACE as the HTTP method.
+		 * @return object
+		 */
+		public function trace(): Request {
+			return $this->call(Method::OPTIONS);
+		}
+
+		/**
+		 * Request a remote resource using PUT as the HTTP method.
 		 * @param null|string|array $data Data to send through this request, see the call method for more information on this parameter.
 		 * @return Request
 		 */
@@ -268,7 +292,6 @@ namespace Http {
 		/**
 		 * Patch those data to the service.
 		 * @param null|string|array $data - Data to send with this requst.
-		 * @param int $timeout Seconds this request shall last before it times out.
 		 * @return object
 		 */
 		public function patch(null|string|array $data = null): Request {
@@ -290,7 +313,7 @@ namespace Http {
 		 * @param int a port number.
 		 * @return Request
 		 */
-		public function port(int $port): Request {
+		public function setPort(int $port): Request {
 			$this->setOption(CURLOPT_PORT, $port);
 			return $this;
 		}
@@ -317,7 +340,7 @@ namespace Http {
 		 * @return object
 		 * @since 1.4
 		 */
-		public function cookiejar(string $filepath): Request {
+		public function setCookiejar(string $filepath): Request {
 			$this->cookiejar = $filepath;
 			return $this;
 		}
@@ -351,28 +374,17 @@ namespace Http {
 		 * @param int $authType The HTTP authentication method(s) to use
 		 * @return Request
 		 */
-		public function authorize(string $username, string $password, int $authType = CURLAUTH_ANY): Request {
+		public function setAuthorization(string $username, string $password, int $authType = CURLAUTH_ANY): Request {
 			$this->setOption(CURLOPT_HTTPAUTH, $authType);
 			$this->setOption(CURLOPT_USERPWD, $username.":".$password);
 			return $this;
 		}
 
 		/**
-		 * Alias/Helper method for the above.
-		 * @param string $username The username to use
-		 * @param string $password The password that accompanies the username
-		 * @param int $authType The HTTP authentication method(s) to use
-		 * @return Request
-		 */
-		public function authenticate(string $username, string $password, int $authType = CURLAUTH_ANY): Request {
-			return $this->authorize($username, $password, $authType);
-		}
-
-		/**
 		 * Enable CURL verbosity, captures and pushes the output to the response headers.
 		 * @return Request
 		 */
-		public function verbose(): Request {
+		public function setVerbose(): Request {
 			$this->verbosityHandle = fopen('php://temp', 'rw+');
 			$this->setOption(CURLOPT_VERBOSE, true);
 			$this->setOption(CURLOPT_STDERR, $this->verbosityHandle);

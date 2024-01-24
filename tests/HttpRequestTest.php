@@ -75,7 +75,7 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 		$cookiejar = dirname(__FILE__)."/cookiejar";
 
 		$iRequest = new \Http\Request("https://httpbin.org/cookies/set?name1=value1&value2=value2&value3=value3");
-		$iRequest->cookiejar($cookiejar);
+		$iRequest->setCookiejar($cookiejar);
 		$iResponse = $iRequest->get()->getResponse();
 
 		$this->assertSame([
@@ -199,7 +199,7 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 		$p = "doe";
 
 		$iRequest = new Http\Request("https://httpbin.org/basic-auth/".$u.'/'.$p);
-		$iRequest->authorize($u, $p);
+		$iRequest->setAuthorization($u, $p);
 		$iResponse = $iRequest->get()->getResponse();
 
 		$this->assertEquals(200, $iResponse->getCode());
@@ -218,16 +218,12 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 
 		$url = "https://httpbin.org/digest-auth/".$qop."/".$u."/".$p."/MD5/never";
 
-		try {
-			$iRequestuest = new \Http\Request($url);
-			$iRequestuest->verbose();
-			$iRequestuest->authorize("john", "wayne");
-			$iResponse = $iRequestuest->get()->getResponse();
+		$iRequest = new \Http\Request($url);
+		$iRequest->setVerbose();
+		$iRequest->setAuthorization("john", "wayne");
+		$iResponse = $iRequest->get()->getResponse();
 
-			$this->assertTrue($iResponse->isSuccess());
-		} catch(Exception $e) {
-			$this->fail($e->getMessage());
-		}
+		$this->assertTrue($iResponse->isSuccess());
 	}
 
 	/**
