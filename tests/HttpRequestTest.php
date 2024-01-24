@@ -209,7 +209,7 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	public function testMaxRedirs() {
 		$numRedirs = 10;
 
-		$this->expectException(\Http\ClientError::class);
+		$this->expectException(\Http\HttpError::class);
 		$this->expectExceptionCode(CURLE_TOO_MANY_REDIRECTS);
 	
 		$iRequest = new Http\Request("https://httpbin.org/redirect/" . $numRedirs);
