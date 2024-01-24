@@ -92,6 +92,8 @@ namespace Http {
 				CURLOPT_MAXREDIRS => 5,
 				CURLOPT_SSL_VERIFYPEER => true,
 				CURLOPT_FAILONERROR => false,
+				CURLOPT_MAXREDIRS => 5,
+				CURLOPT_TIMEOUT => 10,
 				CURLOPT_URL => $url // defaults to null, by assigning a potentially unmodified argument we ensure cURL behaves as it normally would
 			];
 		}
@@ -130,14 +132,7 @@ namespace Http {
 		}
 
 		/**
-		* The primary function of this class, performs the actual call to a specified service.
-		* Doing GET requests will append a query build from $data to the URL specified
-		* @param null|Method $method HTTP method to use for this request, default GET.
-		* @param null|string|array $data The full data body to transfer with this request.
-		* @param int $timeout Seconds this request shall last before it times out.
-		* @return Request
-		*/
-		public function call(null|Method $method = self::GET, null|string|array $data = null, int $timeout = 60): Request {
+		public function call(null|Method $method = Method::GET, null|string|array $data = null): Request {
 			if($method === Method::GET) {
 				$url =  $this->getUrl();
 
@@ -154,7 +149,6 @@ namespace Http {
 			}
 
 			$this->setOption(CURLOPT_HTTPHEADER, $this->headers);
-			$this->setOption(CURLOPT_TIMEOUT, $timeout);
 			$this->setOption(CURLOPT_WRITEHEADER, $this->headerHandle);
 
 			// If there is any stored cookies, use the assigned cookiejar
@@ -222,47 +216,19 @@ namespace Http {
 		}
 
 		/**
-		* Perform the request through HTTP GET
-		* @param null|string|array $data
-		* 	Parameters to send with this request, see the call method for more information on this parameter.
-		*	Naturally you should not find a need for this parameter, but it is implemented just in case the server masquarades.
-		*
-		* @param int $timeout - Seconds this request shall last before it times out.
-		* @return \Http\Request
-		*/
-		public function get(null|string|array $data = null, int $timeout = 60): Request {
-			return $this->call(Method::GET, $data, $timeout);
+		public function get(null|string|array $data = null): Request {
 		}
 
 		/**
-		* Perform the request through HTTP POST
-		* @param null|string|array $data Postfields to send with this request, see the call method for more information on this parameter
-		* @param int $timeout Seconds this request shall last before it times out.
-		* @return Request
-		*/
-		public function post(null|string|array $data = null, int $timeout = 60): Request {
-			return $this->call(Method::POST, $data, $timeout);
+		public function post(null|string|array $data = null): Request {
 		}
 
 		/**
-		* Obtain metainformation about the request without transferring the entire message-body
-		*A HEAD request does not accept post data, so the $data parameter is not available here.
-		* 
-		* @param int $timeout Seconds this request shall last before it times out.
-		* @return Request
-		*/
-		public function head(int $timeout = 60): Request {
-			return $this->call(Method::HEAD, null, $timeout);
+		public function head(): Request {
 		}
 
 		/**
-		* Put data through HTTP PUT.
-		* @param null|string|array $data Data to send through this request, see the call method for more information on this parameter.
-		* @param int $timeout Seconds this request shall last before it times out.
-		* @return Request
-		*/
-		public function put(null|string|array $data = null, int $timeout = 60): Request {
-			return $this->call(Method::PUT, $data, $timeout);
+		public function put(null|string|array $data = null): Request {
 		}
 
 		/**
@@ -273,7 +239,7 @@ namespace Http {
 		*
 		* @param int $timeout - Seconds this request shall last before it times out.
 		*/
-		public function delete(null|string|array $data = null, int $timeout = 60): Request {
+		public function delete(null|string|array $data = null): Request {
 			return $this->call(Method::DELETE, $data, $timeout);
 		}
 
@@ -283,7 +249,7 @@ namespace Http {
 		* @param int $timeout Seconds this request shall last before it times out.
 		* @return object
 		*/
-		public function patch(null|string|array $data = null, int $timeout = 60): Request {
+		public function patch(null|string|array $data = null): Request {
 			return $this->call(Method::PATCH, $data, $timeout);
 		}
 
