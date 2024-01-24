@@ -6,41 +6,40 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
-	* Tests GET request works as expected
-	*/	
+	 * Tests GET request works as expected
+	 */	
 	public function testGetRequest() {
 		$iRequest = (new Http\Request("https://httpbin.org/get"))->get();
 		$this->assertEquals(200, $iRequest->getResponse()->getCode());
 	}
 
 	/**
-	* Tests POST request works as expected
-	*/
+	 * Tests POST request works as expected
+	 */
 	public function testPostRequest() {
 		$iRequest = (new Http\Request("https://httpbin.org/post"))->post();
 		$this->assertEquals(200, $iRequest->getResponse()->getCode());
 	}
 
 	/**
-	* Tests PATCH request works as expected
-	*/
+	 * Tests PATCH request works as expected
+	 */
 	public function testPatchRequest() {
 		$iRequest = (new Http\Request("https://httpbin.org/patch"))->patch();
 		$this->assertEquals(200, $iRequest->getResponse()->getCode());
 	}
 
 	/**
-	* Tests PUT request works as expected
-	*/
+	 * Tests PUT request works as expected
+	 */
 	public function testPutRequest() {
 		$iRequest = (new Http\Request("https://httpbin.org/put"))->put();
 		$this->assertEquals(200, $iRequest->getResponse()->getCode());
 	}
 
 	/**
-	* Now test that we can actually put stuff.
-	* @author Allan Thue Rehhoff
-	*/
+	 * Now test that we can actually put stuff.
+	 */
 	public function testPutData() {
 		$iRequest = new Http\Request("https://httpbin.org/put");
 		$response = $iRequest->put(http_build_query(["foo" => "bar"]))->getResponse()->asObject();
@@ -49,16 +48,16 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
-	* Tests DELETE request works as expected
-	*/
+	 * Tests DELETE request works as expected
+	 */
 	public function testDeleteRequest() {
 		$iRequest = (new Http\Request("https://httpbin.org/delete"))->delete();
 		$this->assertEquals(200, $iRequest->getResponse()->getCode());
 	}
 
 	/**
-	* Test that requests who does not return a successful response code fails with an exception
-	*/
+	 * Test that requests who does not return a successful response code fails with an exception
+	 */
 	public function testFailedRequest() {
 		$this->expectException(\Http\HttpError::class);
 		$this->expectExceptionCode(418);
@@ -70,8 +69,8 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
-	* Tests cookies can be set and parsed accordingly.
-	*/
+	 * Tests cookies can be set and parsed accordingly.
+	 */
 	public function testCanRecieveCookies() {
 		$cookiejar = dirname(__FILE__)."/cookiejar";
 
@@ -84,14 +83,11 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 			"value2=value2; Path=/",
 			"value3=value3; Path=/"
 		], $iResponse->getHeaders("Set-Cookie"));
-		//$this->assertEquals(NULL, $iResponse->getHeaders("Set-Cookie"));
-
-		//$this->assertGreaterThan(0, filesize($cookiejar));
 	}
 
 	/**
-	* Quick test that we get a useful object from an XML response
-	*/
+	 * Quick test that we get a useful object from an XML response
+	 */
 	public function testParseXmlPositive() {
 		$iRequest = new Http\Request("https://httpbin.org/xml");
 		$xml = $iRequest->get()->getResponse()->asXml();
@@ -99,8 +95,8 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
-	* Test GET request parameters are send as expected
-	*/
+	 * Test GET request parameters are send as expected
+	 */
 	public function testGetRequestParams() {
 		$iRequest = (new Http\Request("https://httpbin.org/get?john=doe"))->get();
 		$response = json_decode($iRequest->getResponse());
@@ -113,27 +109,27 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 		$this->assertNotEmpty($response2["args"]);
 		
 		/*
-		* I check the keys this way because the returned keys are in this format:
-		* Array (
-     	* 	'meal' => 'pizza'
-		* 	'toppings[0]' => 'cheese'
-		* 	'toppings[1]' => 'ham'
-		* 	'toppings[2]' => 'pineapple'
-		* 	'toppings[3]' => 'bacon'
-		* 	'toppings' => Array (...)
- 		* )
- 		* 
-		* When what I really wanted was this:
-		* Array (
-		*	    [meal] => pizza
-		*	    [toppings] => Array (
-		*	    	[0] => cheese
-		*	    	[1] => ham
-		*	    	[2] => pineapple
-		*	    	[3] => bacon
-		*	    )
-		*	)
-		*/
+		 * I check the keys this way because the returned keys are in this format:
+		 * Array (
+     	 * 	'meal' => 'pizza'
+		 * 	'toppings[0]' => 'cheese'
+		 * 	'toppings[1]' => 'ham'
+		 * 	'toppings[2]' => 'pineapple'
+		 * 	'toppings[3]' => 'bacon'
+		 * 	'toppings' => Array (...)
+ 		 * )
+ 		 * 
+		 * When what I really wanted was this:
+		 * Array (
+		 *	    [meal] => pizza
+		 *	    [toppings] => Array (
+		 *	    	[0] => cheese
+		 *	    	[1] => ham
+		 *	    	[2] => pineapple
+		 *	    	[3] => bacon
+		 *	    )
+		 *	)
+		 */
 		$args = $response2["args"];
 		foreach($params["toppings"] as $key => $value) {
 			$key2check = "toppings[".$key.']';
@@ -144,8 +140,8 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
-	* Test we are able to send a header
-	*/
+	 * Test we are able to send a header
+	 */
 	public function testHeaders() {
 		$ourHeaders = [
 			"X-Firstname" => "John",
@@ -168,8 +164,8 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
-	* Test user agent spoofing
-	*/
+	 * Test user agent spoofing
+	 */
 	public function testUserAgentSpoofing() {
 		$agent = "Mozilla/5.0 (Windows; U; Windows NT 6.1; rv:2.2) Gecko/20110201";
 
@@ -182,8 +178,8 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
-	* Test some poor developer wont end up in a black hole somewhere.
-	*/
+	 * Test some poor developer wont end up in a black hole somewhere.
+	 */
 	public function testMaxRedirs() {
 		$numRedirs = 10;
 
@@ -196,8 +192,8 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
-	* Oh god, i'm not done yet, let's find out if we're able to do a basic HTTP authentication
-	*/
+	 * Oh god, i'm not done yet, let's find out if we're able to do a basic HTTP authentication
+	 */
 	public function testBasicAuth() {
 		$u = "john";
 		$p = "doe";
@@ -213,8 +209,8 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
-	* I cannot guarantee that this will ever work...
-	*/
+	 * I cannot guarantee that this will ever work...
+	 */
 	public function testDigestAuth() {
 		$qop = "auth";
 		$u = "john";
@@ -235,8 +231,8 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
-	* Test posting a file.
-	*/
+	 * Test posting a file.
+	 */
 	public function testPostFileRequest() {
 		// Create a temporary file, for the purpose of this test.
 		// Could be any file path
@@ -258,5 +254,9 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 		$res = json_decode($res);
 		$this->assertNotEmpty($res->files);
 		$this->assertEquals($time, $res->files->tmpfile);
+	}
+
+	public function testWith() {
+		\Http\Request::with("https://httpbin.org/post")->post();
 	}
 }
