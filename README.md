@@ -1,5 +1,11 @@
-# HttpRequest - HTTP Requests the easy way.
+# Introduction
 
+PHP cURL/HTTP requests made easy.  
+
+The library wraps around PHP's built in curl library, eliminating all the hassle and the need for $ch variables.    
+Please inspect the library source and test cases for further documentation and usage examples.  
+
+## Making requests
 ```php
 <?php
 	// Using the bundled autoloader is optional
@@ -22,10 +28,17 @@
 	print_r($response->getResponse()->asRaw());
 ```
 
-Other request methods include 'get', 'put', 'delete' and 'patch'.  
+```php
+<?php
+\Http\Request::with("https://httpbin.org/post")
+->post(["data" => "foo"])
+->getResponse()
+->asObject();
+```
 
-You can tell cURL to fail upon error using Http\Request::failOnError($bool);
+Available request methods include `get`, `post`, `post`, `patch`, `head`, `options`, `connect`, `trace`
 
+## Error handling
 ```php
 <?php
 	// Using the bundled autoloader is optional
@@ -44,8 +57,3 @@ You can tell cURL to fail upon error using Http\Request::failOnError($bool);
 		print $e->getMessage();
 	}
 ```
-
-The library wraps around PHP's built in curl library, eliminating all the hassle and the need for $ch variables. (god I hate $ch)  
-Please inspect the library source and test cases for further documentation and usage examples.  
-
-This tool is licensed under [ WTFPL ](http://www.wtfpl.net/)  
