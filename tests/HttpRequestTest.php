@@ -140,6 +140,32 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
+	 * Test set header
+	 */
+	public function testSetHeader() {
+        $header = 'Content-Type: application/json';
+        $iRequest = new Http\Request();
+        $iRequest->setHeader($header);
+
+        $this->assertContains($header, $iRequest->headers);
+    }
+
+	/**
+	 * Test authorization
+	 */
+	public function testSetAuthorization() {
+        $username = 'user';
+        $password = 'pass';
+        $authType = CURLAUTH_BASIC;
+
+        $iRequest = new \Http\Request();
+        $iRequest->setAuthorization($username, $password, $authType);
+
+        $this->assertEquals($authType, $iRequest->getOption(CURLOPT_HTTPAUTH));
+        $this->assertEquals("$username:$password", $iRequest->getOption(CURLOPT_USERPWD));
+    }
+
+	/**
 	 * Test we are able to send a header
 	 */
 	public function testHeaders() {
@@ -253,6 +279,8 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	public function testWith() {
-		\Http\Request::with("https://httpbin.org/post")->post();
+		$data = \Http\Request::with("https://httpbin.org/post")->post(["data" => "foo"])->getResponse()->asObject();
+
+		$this->assertEquals($data->form->data, "foo");
 	}
 }
