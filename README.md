@@ -68,7 +68,7 @@ Available request methods include `get`, `post`, `post`, `patch`, `delete`, `hea
 		print $iThrowable->getMessage();
 	} catch(\Http\HttpError $iThrowable) {
 		// There was an error that caused the remote to return a HTTP code >= 400
-		// This exception is also thrown, is too many redirects are found.
+		// This exception is also thrown, if too many redirects are found.
 		print $iThrowable->getCode();
 		print $iThrowable->getMessage();
 	} catch(\JsonException $iThrowable) {
