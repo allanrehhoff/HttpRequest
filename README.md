@@ -51,6 +51,15 @@ the above is equivelant to:
 	);
 ```
 
+Check the response code:  
+```php
+<?php
+	\Http\Request::with("https://httpbin.org/status/301")
+	->setOption(CURLOPT_FOLLOWLOCATION, false)
+	->head()
+	->getHttpCode();
+```
+
 Available request methods include `get`, `post`, `post`, `patch`, `delete`, `head`, `options`, `connect`, `trace`
 
 ## Error handling
