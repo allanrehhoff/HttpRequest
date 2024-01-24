@@ -8,9 +8,10 @@ v5.0
 - Typehinting to methods and properties.  
 - Removed parameters 'timeout' from methods, use Request::setOption instead.  
 - Removed method Request::authenticate.  
-- Request::cookiejar renamed to Request::setCookiejar.  
-- Request::port renamed to Request::setPort.  
-- Request::authorization renamed to Request::setAuthorization.  
+- Renamed Request::cookiejar to Request::setCookiejar.  
+- Renamed Request::port to Request::setPort.  
+- Renamed Request::authorization to Request::setAuthorization.
+- Added Request::with($url) method.  
 
 v4.0
 - Removed Http\Request::suppressErrors(); method.  
