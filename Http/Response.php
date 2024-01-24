@@ -7,9 +7,21 @@
 namespace Http {
 	class Response {
 		private $request, $rawHeaders;
-		private $responseHeaders = [];
-		public $xmlErrors = [];
 
+		/**
+		 * @var array $responseHeaders Response headers after parsing
+		 */
+		private array $responseHeaders = [];
+
+		/**
+		 * @var array $xmlErrors Populated with errors when parsing an XML response
+		 */
+		public array $xmlErrors = [];
+
+		/**
+		 * Constructs the response to the request
+		 * @param Request $iRequest The request object to construct a response for
+		 */
 		public function __construct(Request $iRequest) {
 			$this->request = $iRequest;
 
@@ -32,25 +44,23 @@ namespace Http {
 		}
 
 		/**
-		* Gives the raw response returned by remote server.
-		* @since 1.2
-		* @return string
-		*/
+		 * Gives the raw response returned by remote server.
+		 * @since 1.2
+		 * @return string
+		 */
 		public function __toString() {
 			return $this->getBody();
 		}
 
 		/**
-		* Get cURL information regarding this request.
-		* If index is given, returns its value, NULL if index is undefined.
-		* Otherwise, returns an associative array of all available values.
-		*
-		* @param string $opt An index from curl_getinfo() returned array.
-		* @see http://php.net/manual/en/function.curl-getinfo.php
-		* @throws CurlError
-		* @return mixed
-		*/
-		public function getInfo(null|string $option = null) {
+		 * Get cURL information regarding this request.
+		 * If index is given, returns its value, NULL if index is undefined.
+		 * Otherwise, returns an associative array of all available values.
+		 *
+		 * @param string $opt An index from curl_getinfo() returned array.
+		 * @see http://php.net/manual/en/function.curl-getinfo.php
+		 * @return mixed
+		 */
 			$curlInfo = $this->request->curlInfo;
 
 			if($option !== null) {
@@ -61,17 +71,17 @@ namespace Http {
 		}
 
 		/**
-		* Returns the HTTP code represented by this reponse
-		* @return int
-		*/
+		 * Returns the HTTP code represented by this reponse
+		 * @return int
+		 */
 		public function getCode(): int {
 			return (int) $this->getInfo("http_code");
 		}
 
 		/**
-		* Finds out whether a request was successful or not.
-		* @return bool
-		*/
+		 * Finds out whether a request was successful or not.
+		 * @return bool
+		 */
 		public function isSuccess(): bool {
 			return $this->getCode() < 400;
 		}
@@ -130,13 +140,13 @@ namespace Http {
 		}
 
 		/**
-		* Returns parsed header values.
-		* If header is given returns that headers value.
-		* Otherwise all response headers is returned.
-		* 
-		* @param null|string $header Name of the header for which to get the value
-		* @return mixed
-		*/
+		 * Returns parsed header values.
+		 * If header is given returns that headers value.
+		 * Otherwise all response headers is returned.
+		 * 
+		 * @param null|string $header Name of the header for which to get the value
+		 * @return null|string|array
+		 */
 		public function getHeaders(null|string $header = null) {
 			if($header !== null) {
 				return $this->responseHeaders[$header] ?? null;
@@ -146,11 +156,10 @@ namespace Http {
 		}
 
 		/**
-		* Get cookies set by the remote server for the performed request, in case a cookiejar wasn't utilized.
-		* @since 1.2
-		* @param null|string $cookie Name of the cookie for which to retrieve details, null if it doesn't exist, ommit to get all cookies.
-		* @return array
-		*/
+		 * Get cookies set by the remote server for the performed request, in case a cookiejar wasn't utilized.
+		 * @param null|string $cookie Name of the cookie for which to retrieve details, null if it doesn't exist, ommit to get all cookies.
+		 * @return array
+		 */
 		public function getCookie(null|string $cookie = null): array {
 			if($cookie !== null) {
 				return $this->responseHeaders["Set-Cookie"][$cookie] ?? null;
@@ -161,16 +170,16 @@ namespace Http {
 
 		/**
 		 * Return value of a given header
-		 * @return string
+		 * @return string|array
 		 */
 		public function getCookies(): string {
 			return $this->responseHeaders["Set-Cookie"];
 		}
 
 		/**
-		* Get the request response text without the headers.
-		* @return string
-		*/
+		 * Get the request response text without the headers.
+		 * @return string
+		 */
 		public function getBody(): string {
 			if($this->request->returndata === null) {
 				throw new \RuntimeException("Perform a request before accessing response data.");
@@ -180,27 +189,27 @@ namespace Http {
 		}
 
 		/**
-		* Decodes and returns an object, assumes HTTP Response is JSON
-		* @return \stdClass
-		*/
+		 * Decodes and returns an object, assumes HTTP Response is JSON
+		 * @return \stdClass
+		 */
 		public function asObject(): \stdClass {
 			return json_decode($this->getBody());
 		}
 
 		/**
-		* Decodes and returns an associative array, assumes the HTTP Response is JSON
-		* @return array
-		*/
+		 * Decodes and returns an associative array, assumes the HTTP Response is JSON
+		 * @return array
+		 */
 		public function asArray(): array {
 			return json_decode($this->getBody(), true);
 		}
 
 		/**
-		* Returns a SimpleXML object with containing the response content.
-		* After calling any potential xml error will be available for inspection in the $xmlErrors property.
-		* @param bool $useErrors Toggle xml errors supression. Please be advised that setting this to true will also clear any previous XML errors in the buffer.
-		* @return \SimpleXMLElement
-		*/
+		 * Returns a SimpleXML object with containing the response content.
+		 * After calling any potential xml error will be available for inspection in the $xmlErrors property.
+		 * @param bool $useErrors Toggle xml errors supression. Please be advised that setting this to true will also clear any previous XML errors in the buffer.
+		 * @return \SimpleXMLElement
+		 */
 		public function asXml(bool $useErrors = false): \SimpleXMLElement {
 			libxml_use_internal_errors($useErrors);
 			$xml = simplexml_load_string($this->getBody());

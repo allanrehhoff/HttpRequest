@@ -70,18 +70,11 @@ namespace Http {
 		 */
 		public array $options = [];
 
-		const GET = "GET";
-		const POST = "POST";
-		const HEAD = "HEAD";
-		const PUT = "PUT";
-		const DELETE = "DELETE";
-		const PATCH = "PATCH";
-
 		/**
-		* The constructor takes a single argument, the url of the host to request.
-		* @param string $url A fully qualified url, on which the service can be reached.
-		*/
-		public function __construct($url = null) {
+		 * The constructor takes a single argument, the url of the host to request.
+		 * @param null|string $url A fully qualified URL to a remote entity.
+		 */
+		public function __construct(null|string $url = null) {
 			$this->curl = curl_init();
 
 			$this->headerHandle = fopen("php://temp", "rw+");
@@ -89,7 +82,6 @@ namespace Http {
 			$this->options = [
 				CURLOPT_RETURNTRANSFER => true,
 				CURLOPT_FOLLOWLOCATION => true,
-				CURLOPT_MAXREDIRS => 5,
 				CURLOPT_SSL_VERIFYPEER => true,
 				CURLOPT_FAILONERROR => false,
 				CURLOPT_MAXREDIRS => 5,
@@ -99,9 +91,9 @@ namespace Http {
 		}
 
 		/**
-		* Do not bother about this method, you should not be calling this.
-		* @return void
-		*/
+		 * Do not bother about this method, you should not be calling this.
+		 * @return void
+		 */
 		public function __destruct() {
 			if(is_resource($this->verbosityHandle)) {
 				fclose($this->verbosityHandle);
@@ -113,12 +105,12 @@ namespace Http {
 		}
 
 		/**
-		* Allows usage for any curl_* functions in PHP not implemented by this class.
-		* @param string $function - cURL function to call without, curl_ part must be ommited.
-		* @param array $params - Array of arguments to pass to $function.
-		* @return mixed
-		* @link http://php.net/manual/en/ref.curl.php
-		*/
+		 * Allows usage for any curl_* functions in PHP not implemented by this class.
+		 * @param string $function - cURL function to call without, curl_ part must be ommited.
+		 * @param array $params - Array of arguments to pass to $function.
+		 * @return mixed
+		 * @link http://php.net/manual/en/ref.curl.php
+		 */
 		public function __call(string $function, array $params): mixed {
 			$function = "curl_".strtolower($function);
 
@@ -132,6 +124,12 @@ namespace Http {
 		}
 
 		/**
+		 * The primary function of this class, performs the actual call to a specified service.
+		 * Doing GET requests will append a query build from $data to the URL specified
+		 * @param null|Method $method HTTP method to use for this request, default GET.
+		 * @param null|string|array $data The full data body to transfer with this request.
+		 * @return Request
+		 */
 		public function call(null|Method $method = Method::GET, null|string|array $data = null): Request {
 			if($method === Method::GET) {
 				$url =  $this->getUrl();
@@ -216,69 +214,93 @@ namespace Http {
 		}
 
 		/**
+		 * Perform the request through HTTP GET
+		 * @param null|string|array $data
+		 * 	Parameters to send with this request, see the call method for more information on this parameter.
+		 *	Naturally you should not find a need for this parameter, but it is implemented just in case the server masquarades.
+		 *
+		 * @return \Http\Request
+		 */
 		public function get(null|string|array $data = null): Request {
+			return $this->call(Method::GET, $data);
 		}
 
 		/**
+		 * Perform the request through HTTP POST
+		 * @param null|string|array $data Postfields to send with this request, see the call method for more information on this parameter
+		 * @return Request
+		 */
 		public function post(null|string|array $data = null): Request {
+			return $this->call(Method::POST, $data);
 		}
 
 		/**
+		 * Obtain metainformation about the request without transferring the entire message-body
+		 *A HEAD request does not accept post data, so the $data parameter is not available here.
+		 * 
+		 * @return Request
+		 */
 		public function head(): Request {
+			return $this->call(Method::HEAD, null);
 		}
 
 		/**
+		 * Put data through HTTP PUT.
+		 * @param null|string|array $data Data to send through this request, see the call method for more information on this parameter.
+		 * @return Request
+		 */
 		public function put(null|string|array $data = null): Request {
+			return $this->call(Method::PUT, $data);
 		}
 
 		/**
-		* Requests that the origin server delete the resource identified by the Request-URI.
-		* @param null|string|array $data 
-		*	When using this parameter you should consider signaling the pressence of a message body
-		*	By providing a Content-Length or Transfer-Encoding header.
-		*
-		* @param int $timeout - Seconds this request shall last before it times out.
-		*/
+		 * Requests that the origin server delete the resource identified by the Request-URI.
+		 * @param null|string|array $data 
+		 *	When using this parameter you should consider signaling the pressence of a message body
+		 *	By providing a Content-Length or Transfer-Encoding header.
+		 *
+		 * @param int $timeout - Seconds this request shall last before it times out.
+		 */
 		public function delete(null|string|array $data = null): Request {
-			return $this->call(Method::DELETE, $data, $timeout);
+			return $this->call(Method::DELETE, $data);
 		}
 
 		/**
-		* Patch those data to the service.
-		* @param null|string|array $data - Data to send with this requst.
-		* @param int $timeout Seconds this request shall last before it times out.
-		* @return object
-		*/
+		 * Patch those data to the service.
+		 * @param null|string|array $data - Data to send with this requst.
+		 * @param int $timeout Seconds this request shall last before it times out.
+		 * @return object
+		 */
 		public function patch(null|string|array $data = null): Request {
-			return $this->call(Method::PATCH, $data, $timeout);
+			return $this->call(Method::PATCH, $data);
 		}
 
 		/**
-		* Provide an additional header for this request.
-		* @param string $header The header to send with this request.
-		* @return Request
-		*/
+		 * Provide an additional header for this request.
+		 * @param string $header The header to send with this request.
+		 * @return Request
+		 */
 		public function setHeader(string $header): Request {
 			$this->headers[] = $header;
 			return $this;
 		}
 
 		/**
-		* Specifies the port to be requested upon
-		* @param int a port number.
-		* @return Request
-		*/
+		 * Specifies the port to be requested upon
+		 * @param int a port number.
+		 * @return Request
+		 */
 		public function port(int $port): Request {
 			$this->setOption(CURLOPT_PORT, $port);
 			return $this;
 		}
 
 		/**
-		* Send a cookie with this request.
-		* @param string $name name of the cookie
-		* @param string $value value of the cookie
-		* @return Request
-		*/
+		 * Send a cookie with this request.
+		 * @param string $name name of the cookie
+		 * @param string $value value of the cookie
+		 * @return Request
+		 */
 		public function setCookie(string $name, string $value): Request {
 			$this->cookies[$name] = (object) [
 				"name" => $name,
@@ -289,46 +311,46 @@ namespace Http {
 		}
 
 		/**
-		* The name of a file in which to store all recieved cookies when the handle is closed, e.g. after a call to curl_close.
-		* This is automatically done by this class is destructed.
-		* @param string $filepath
-		* @return object
-		* @since 1.4
-		*/
+		 * The name of a file in which to store all recieved cookies when the handle is closed, e.g. after a call to curl_close.
+		 * This is automatically done by this class is destructed.
+		 * @param string $filepath
+		 * @return object
+		 * @since 1.4
+		 */
 		public function cookiejar(string $filepath): Request {
 			$this->cookiejar = $filepath;
 			return $this;
 		}
 
 		/**
-		* Manually set a cURL option for this request.
-		* @param int $option The CURLOPT_XXX option to set.
-		* @param mixed Value for the option
-		* @return Request
-		* @see http://php.net/curl_setopt
-		*/
+		 * Manually set a cURL option for this request.
+		 * @param int $option The CURLOPT_XXX option to set.
+		 * @param mixed Value for the option
+		 * @return Request
+		 * @see http://php.net/curl_setopt
+		 */
 		public function setOption(int $option, mixed $value): Request {
 			$this->options[$option] = $value;
 			return $this;
 		}
 
 		/**
-		* Retrieve the current value of a given cURL option
-		* @param int $option CURLOPT_* value to retrieve
-		* @return mixed
-		* @since 1.3
-		*/
+		 * Retrieve the current value of a given cURL option
+		 * @param int $option CURLOPT_* value to retrieve
+		 * @return mixed
+		 * @since 1.3
+		 */
 		public function getOption(int $option): mixed {
 			return $this->options[$option];
 		}
 
 		/**
-		* A string to use as authorization for this request.
-		* @param string $username The username to use
-		* @param string $password The password that accompanies the username
-		* @param int $authType The HTTP authentication method(s) to use
-		* @return Request
-		*/
+		 * A string to use as authorization for this request.
+		 * @param string $username The username to use
+		 * @param string $password The password that accompanies the username
+		 * @param int $authType The HTTP authentication method(s) to use
+		 * @return Request
+		 */
 		public function authorize(string $username, string $password, int $authType = CURLAUTH_ANY): Request {
 			$this->setOption(CURLOPT_HTTPAUTH, $authType);
 			$this->setOption(CURLOPT_USERPWD, $username.":".$password);
@@ -336,20 +358,20 @@ namespace Http {
 		}
 
 		/**
-		* Alias/Helper method for the above.
-		* @param string $username The username to use
-		* @param string $password The password that accompanies the username
-		* @param int $authType The HTTP authentication method(s) to use
-		* @return Request
-		*/
+		 * Alias/Helper method for the above.
+		 * @param string $username The username to use
+		 * @param string $password The password that accompanies the username
+		 * @param int $authType The HTTP authentication method(s) to use
+		 * @return Request
+		 */
 		public function authenticate(string $username, string $password, int $authType = CURLAUTH_ANY): Request {
 			return $this->authorize($username, $password, $authType);
 		}
 
 		/**
-		* Enable CURL verbosity, captures and pushes the output to the response headers.
-		* @return Request
-		*/
+		 * Enable CURL verbosity, captures and pushes the output to the response headers.
+		 * @return Request
+		 */
 		public function verbose(): Request {
 			$this->verbosityHandle = fopen('php://temp', 'rw+');
 			$this->setOption(CURLOPT_VERBOSE, true);
@@ -359,20 +381,20 @@ namespace Http {
 		}
 
 		/**
-		* Sets destination url, to which this request will be sent.
-		* @param string $value a fully qualified url
-		* @return Request
-		*/
+		 * Sets destination url, to which this request will be sent.
+		 * @param string $value a fully qualified url
+		 * @return Request
+		 */
 		public function setUrl(string $value): Request {
 			$this->setOption(CURLOPT_URL, $value);
 			return $this;
 		}
 
 		/**
-		* Get the URL to be requested.
-		* @return string
-		* @since 1.1
-		*/
+		 * Get the URL to be requested.
+		 * @return string
+		 * @since 1.1
+		 */
 		public function getUrl(): string {
 			return $this->getOption(CURLOPT_URL);
 		}
