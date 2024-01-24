@@ -6,7 +6,15 @@
 */
 namespace Http {
 	class Response {
-		private $request, $rawHeaders;
+		/**
+		 * @var Request $request The request object that spawned this response.
+		 */
+		private Request $request;
+		
+		/**
+		 * @var string $rawHeaders Response headers before being parsed
+		 */
+		private string $rawHeaders;
 
 		/**
 		 * @var array $responseHeaders Response headers after parsing
@@ -61,6 +69,7 @@ namespace Http {
 		 * @see http://php.net/manual/en/function.curl-getinfo.php
 		 * @return mixed
 		 */
+		public function getInfo(null|string $option = null): mixed {
 			$curlInfo = $this->request->curlInfo;
 
 			if($option !== null) {
@@ -147,7 +156,7 @@ namespace Http {
 		 * @param null|string $header Name of the header for which to get the value
 		 * @return null|string|array
 		 */
-		public function getHeaders(null|string $header = null) {
+		public function getHeaders(null|string $header = null): null|string|array {
 			if($header !== null) {
 				return $this->responseHeaders[$header] ?? null;
 			}
@@ -172,8 +181,8 @@ namespace Http {
 		 * Return value of a given header
 		 * @return string|array
 		 */
-		public function getCookies(): string {
-			return $this->responseHeaders["Set-Cookie"];
+		public function getCookies(): string|array {
+			return $this->responseHeaders["Set-Cookie"] ?? [];
 		}
 
 		/**
