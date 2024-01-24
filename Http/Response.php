@@ -85,7 +85,7 @@ namespace Http {
 		 * Returns the HTTP code represented by this reponse
 		 * @return int
 		 */
-		public function getCode(): int {
+		public function getHttpCode(): int {
 			return (int) $this->getInfo("http_code");
 		}
 
@@ -94,7 +94,7 @@ namespace Http {
 		 * @return bool
 		 */
 		public function isSuccess(): bool {
-			return $this->getCode() < 400;
+			return $this->getHttpCode() < 400;
 		}
 
 		/**

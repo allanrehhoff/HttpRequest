@@ -10,6 +10,7 @@ v5.0
 - Removed method Request::authenticate.  
 - Renamed Request::cookiejar to Request::setCookiejar.  
 - Renamed Request::port to Request::setPort.  
+- Renamed Response::getCode to Response::getHttpCode.  
 - Renamed Request::authorization to Request::setAuthorization.
 - Added Request::with($url) method.  
 

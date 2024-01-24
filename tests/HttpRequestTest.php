@@ -5,12 +5,22 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 		if(file_exists($cookiejar)) unlink($cookiejar);
 	}
 
+	public function testGetHttpCode() {
+		$httpCode = (new \Http\Request("https://httpbin.org/status/301"))
+		->setOption(CURLOPT_FOLLOWLOCATION, false)
+		->head()
+		->getResponse()
+		->getHttpCode();
+
+		$this->assertEquals(301, $httpCode);
+	}
+
 	/**
 	 * Tests GET request works as expected
 	 */	
 	public function testGetRequest() {
 		$iRequest = (new Http\Request("https://httpbin.org/get"))->get();
-		$this->assertEquals(200, $iRequest->getResponse()->getCode());
+		$this->assertEquals(200, $iRequest->getResponse()->getHttpCode());
 	}
 
 	/**
@@ -18,7 +28,7 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	 */
 	public function testPostRequest() {
 		$iRequest = (new Http\Request("https://httpbin.org/post"))->post();
-		$this->assertEquals(200, $iRequest->getResponse()->getCode());
+		$this->assertEquals(200, $iRequest->getResponse()->getHttpCode());
 	}
 
 	/**
@@ -26,7 +36,7 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	 */
 	public function testPatchRequest() {
 		$iRequest = (new Http\Request("https://httpbin.org/patch"))->patch();
-		$this->assertEquals(200, $iRequest->getResponse()->getCode());
+		$this->assertEquals(200, $iRequest->getResponse()->getHttpCode());
 	}
 
 	/**
@@ -34,7 +44,7 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	 */
 	public function testPutRequest() {
 		$iRequest = (new Http\Request("https://httpbin.org/put"))->put();
-		$this->assertEquals(200, $iRequest->getResponse()->getCode());
+		$this->assertEquals(200, $iRequest->getResponse()->getHttpCode());
 	}
 
 	/**
@@ -52,7 +62,7 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 	 */
 	public function testDeleteRequest() {
 		$iRequest = (new Http\Request("https://httpbin.org/delete"))->delete();
-		$this->assertEquals(200, $iRequest->getResponse()->getCode());
+		$this->assertEquals(200, $iRequest->getResponse()->getHttpCode());
 	}
 
 	/**
@@ -228,7 +238,7 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 		$iRequest->setAuthorization($u, $p);
 		$iResponse = $iRequest->get()->getResponse();
 
-		$this->assertEquals(200, $iResponse->getCode());
+		$this->assertEquals(200, $iResponse->getHttpCode());
 
 		$iResponse = $iResponse->asObject();
 		$this->assertTrue($iResponse->authenticated);

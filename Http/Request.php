@@ -218,7 +218,7 @@ namespace Http {
 			} else if($this->response->isSuccess() !== true) {
 				throw new HttpError(
 					$this->response->getBody(),
-					$this->response->getCode()
+					$this->response->getHttpCode()
 				);
 			}
 
