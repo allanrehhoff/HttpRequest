@@ -32,14 +32,17 @@ namespace Http {
 		 */
 		public function __construct(Request $iRequest) {
 			$this->request = $iRequest;
-
+			
 			$headerHandle = $this->request->headerHandle;
 			$verbosityHandle = $this->request->verbosityHandle;
 
 			// And parse the headers for a client to use.
 			rewind($headerHandle); 
 			$this->rawHeaders = rtrim(stream_get_contents($headerHandle), "\r\n");
-			$this->responseHeaders = $this->parseHeaders($this->rawHeaders);
+
+			if($this->request->method !== null) {
+				$this->responseHeaders = $this->parseHeaders($this->rawHeaders);
+			}
 
 			if(is_resource($verbosityHandle)) {
 				rewind($verbosityHandle); //@todo: Why do I need this, I'm still wondering...
@@ -52,8 +55,7 @@ namespace Http {
 		}
 
 		/**
-		 * Gives the raw response returned by remote server.
-		 * @since 1.2
+		 * Gives the raw response returned by remote resource.
 		 * @return string
 		 */
 		public function __toString() {
@@ -104,7 +106,7 @@ namespace Http {
 		 * @param string $rawHeaders the raw header reponse
 		 * @return array The parsed headers.
 		 */
-		function parseHeaders(string $rawHeaders): array {
+		public function parseHeaders(string $rawHeaders): array {
 			$headers = [];
 			$currentKey = '';
 		
@@ -202,7 +204,7 @@ namespace Http {
 		 * @return \stdClass
 		 */
 		public function asObject(): \stdClass {
-			return json_decode($this->getBody());
+			return json_decode($this->getBody(), flags: JSON_THROW_ON_ERROR);
 		}
 
 		/**
@@ -210,7 +212,7 @@ namespace Http {
 		 * @return array
 		 */
 		public function asArray(): array {
-			return json_decode($this->getBody(), true);
+			return json_decode($this->getBody(), true, flags: JSON_THROW_ON_ERROR);
 		}
 
 		/**
