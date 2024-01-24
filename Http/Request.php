@@ -124,6 +124,15 @@ namespace Http {
 		}
 
 		/**
+		 * Construct a request object in a static way, useful for chaining
+		 * @param null|string $url A fully qualified URL to a remote entity, default null
+		 * @return Request
+		 */
+		public static function with(null|string $url = null): Request {
+			return new static($url);
+		}
+
+		/**
 		 * The primary function of this class, performs the actual call to a specified service.
 		 * Doing GET requests will append a query build from $data to the URL specified
 		 * @param null|Method $method HTTP method to use for this request, default GET.
