@@ -12,31 +12,46 @@ Please inspect the library source and test cases for further documentation and u
 	require "autoload.php";
 
 	// Assuming you have an autoloader in place.
-	$request = new \Http\Request("http://httpbin.org/post");
-	$response = $request->post(["foo" => "bar", "john" => "doe"]);
+	$iRequest = new \Http\Request("http://httpbin.org/post");
+	$iResponse = $iRequest->post(["foo" => "bar", "john" => "doe"]);
 
-	// Assumes a valid JSON response
-	print_r($response->getResponse()->asObject());
+	// Assumes a valid JSON response body
+	print_r($iResponse->getResponse()->asObject());
 
-	// Likewise assumes a valid JSON response
-	print_r($response->getResponse()->asArray());
+	// Likewise assumes a valid JSON response body
+	print_r($iResponse->getResponse()->asArray());
 
-	// Assumes a valid XML response
-	print_r($response->getResponse()->asXML());
+	// Assumes a valid XML response body
+	print_r($iResponse->getResponse()->asXML());
 
 	// ... Or if you prefer to do it all by yourself
-	print_r($response->getResponse()->asRaw());
+	print_r($iResponse->getResponse()->getBody());
 ```
+
+You may use the factory method 'with' if all you need is a simple request, with an expected JSON response
 
 ```php
 <?php
-\Http\Request::with("https://httpbin.org/post")
-->post(["data" => "foo"])
-->getResponse()
-->asObject();
+	\Http\Request::with("https://httpbin.org/post")
+	->post(["data" => "foo"])
+	->getResponse()
+	->asObject();
 ```
 
-Available request methods include `get`, `post`, `post`, `patch`, `head`, `options`, `connect`, `trace`
+the above is equivelant to:
+
+```php
+<?php
+	json_decode(
+		\Http\Request::with("https://httpbin.org/post")
+		->setMethod(Method::POST)
+		->send(["data" => "foo"])
+		->getResponse()
+		->getBody()
+	);
+```
+
+Available request methods include `get`, `post`, `post`, `patch`, `delete`, `head`, `options`, `connect`, `trace`
 
 ## Error handling
 ```php
@@ -46,14 +61,20 @@ Available request methods include `get`, `post`, `post`, `patch`, `head`, `optio
 
 	try {
 		$iRequest = new \Http\Request("https://httpbin.org/status/418");
-		$response = $iRequest->get();
-	} catch(\Http\ClientError $e) {
+		$iResponse = $iRequest->post(["lorem", "ipsum"]);
+	} catch(\Http\ClientError $iThrowable) {
 		// There was an error with the implementation that made cURL return an error
-		print $e->getCode();
-		print $e->getMessage();
-	} catch(\Http\HttpError $e) {
+		print $iThrowable->getCode();
+		print $iThrowable->getMessage();
+	} catch(\Http\HttpError $iThrowable) {
 		// There was an error that caused the remote to return a HTTP code >= 400
-		print $e->getCode();
-		print $e->getMessage();
+		// This exception is also thrown, is too many redirects are found.
+		print $iThrowable->getCode();
+		print $iThrowable->getMessage();
+	} catch(\JsonException $iThrowable) {
+		// The remote resource returned successfully.
+		// but the response body failed parsing as JSON
+		print $iThrowable->getCode();
+		print $iThrowable->getMessage();
 	}
 ```
