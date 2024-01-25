@@ -5,6 +5,29 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 		if(file_exists($cookiejar)) unlink($cookiejar);
 	}
 
+	public function testWithMethodUrlOnly() {
+		$data = \Http\Request::with("https://httpbin.org/post")
+		->post(["data" => "foo"])
+		->getResponse()
+		->asObject();
+
+		$this->assertEquals($data->form->data, "foo");
+	}
+
+	public function testWithMethodTwoParams() {
+		$data = \Http\Request::with("POST", "https://httpbin.org/post")
+		->send(["data" => "foo"])
+		->getResponse()
+		->asObject();
+
+		$this->assertEquals($data->form->data, "foo");
+	}
+
+	public function testWithMethodThrowsException() {
+		$this->expectException(\ValueError::class);
+		\Http\Request::with("https://httpbin.org/post", "https://httpbin.org/post");
+	}
+
 	public function testGetHttpCode() {
 		$httpCode = (new \Http\Request("https://httpbin.org/status/301"))
 		->setOption(CURLOPT_FOLLOWLOCATION, false)
@@ -286,11 +309,5 @@ class HttpRequestTest extends \PHPUnit\Framework\TestCase {
 		$res = json_decode($res);
 		$this->assertNotEmpty($res->files);
 		$this->assertEquals($time, $res->files->tmpfile);
-	}
-
-	public function testWith() {
-		$data = \Http\Request::with("https://httpbin.org/post")->post(["data" => "foo"])->getResponse()->asObject();
-
-		$this->assertEquals($data->form->data, "foo");
 	}
 }

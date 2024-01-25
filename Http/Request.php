@@ -130,11 +130,28 @@ namespace Http {
 
 		/**
 		 * Construct a request object in a static way, useful for chaining
+		 * Supports the following syntaxes:
+		 * - `Request::with('GET', 'https://example.com')`
+		 * - `Request::with(Method::GET, 'https://example.com')`
+		 * - `Request::with('https://example.com')`
+		 * 
+		 * If request method is omitted, it will still be neccessary to set it later.
+		 * Either implicitly calling methods such as `Request::get()`, `Request::post()` or `Request::patch()`
+		 * Or explicitly with `Request::setMethod()`
+		 * @param string|Method $methodOrUrl Request method or remote url resource.
 		 * @param null|string $url A fully qualified URL to a remote entity, default null
+		 * @throws \ValueError If an unsupported request method is passed
 		 * @return Request
 		 */
-		public static function with(null|string $url = null): Request {
-			return new static($url);
+		public static function with(string|Method $methodOrUrl, null|string $url = null): Request {
+			$iRequest = new static($url ?? $methodOrUrl);
+
+			if($url !== null) {
+				$iMethod = $methodOrUrl instanceof Method ? $methodOrUrl : Method::from($methodOrUrl);
+				$iRequest->setMethod($iMethod);
+			}
+
+			return $iRequest;
 		}
 
 		/**
