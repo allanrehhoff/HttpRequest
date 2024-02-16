@@ -17,7 +17,7 @@ v5.0
 v4.0
 - Removed Http\Request::suppressErrors(); method.  
 - Exception Http\CurlException replaced with Http\CurlError
-- New exception Http\ClientError.  
+- New exception Http\HttpError.  
 - Renamed Http\Response::asRaw(); to Http\Response::getBody();
 - Refactored tests to PHP8 compatibility.  
 

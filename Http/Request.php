@@ -213,6 +213,17 @@ namespace Http {
 
 			$this->response = new Response($this);
 
+			$this->throwErrors();
+			$this->closeConnection();
+
+			return $this;
+		}
+
+		/**
+		 * Force closes the curl connection
+		 * @return Request The current instance
+		 */
+		private function closeConnection(): Request {
 			curl_close($this->curl);
  
 			// PHP 8.0.0 > compat
@@ -222,23 +233,29 @@ namespace Http {
 			$this->curl = null;
 			$this->curl = curl_init();
 
-			if($this->curlInfo["redirect_count"] >= $this->getOption(CURLOPT_MAXREDIRS)) {
-				throw new HttpError(sprintf(
-					"Reached maximum number of redirects (%d)",
-					$this->getOption(CURLOPT_MAXREDIRS)),
-				CURLE_TOO_MANY_REDIRECTS);
-			} else if(curl_errno($this->curl) != CURLE_OK) {
-				throw new ClientError(
-					curl_error($this->curl),
-					curl_errno($this->curl)
-				);
-			} else if($this->response->isSuccess() !== true) {
-				throw new HttpError(
-					$this->response->getBody(),
-					$this->response->getHttpCode()
-				);
-			}
+			return $this;
+		}
 
+		/**
+		 * Throws errors if request was not successful.
+		 * @throws ConnectionError There was a problem with the remote resource or the implementation that made cURL return an error
+		 * @throws HttpError There was an error that caused the remote to return a HTTP code >= 400, likely due to an errornous integration
+		 * @return Request The current instance
+		 */
+		private function throwErrors(): Request {
+			// Check for cURL errors
+			curl_errno($this->curl) == CURLE_OK or throw new ConnectionError(
+				curl_error($this->curl),
+				curl_errno($this->curl)
+			);
+
+			// Check for non-successful HTTP response
+			$this->getResponse()->isSuccess() or throw new HttpError(
+				$this->getResponse()->getBody(),
+				$this->getResponse()->getHttpCode()
+			);
+		
+			// No errors, return current instance for method chaining
 			return $this;
 		}
 
@@ -248,7 +265,7 @@ namespace Http {
 		 * 	Parameters to send with this request, see the call method for more information on this parameter.
 		 *	Naturally you should not find a need for this parameter, but it is implemented just in case the server masquarades.
 		 *
-		 * @return \Http\Request
+		 * @return Request
 		 */
 		public function get(null|string|array $data = null): Request {
 			return $this->setMethod(Method::GET)->send($data);
@@ -275,7 +292,7 @@ namespace Http {
 
 		/**
 		 * Request a remote resource using OPTIONS as the HTTP method.
-		 * @return object
+		 * @return Request
 		 */
 		public function options(): Request {
 			return $this->setMethod(Method::OPTIONS)->send();
@@ -283,7 +300,7 @@ namespace Http {
 
 		/**
 		 * Request a remote resource using CONNECT as the HTTP method.
-		 * @return object
+		 * @return Request
 		 */
 		public function connect(): Request {
 			return $this->setMethod(Method::OPTIONS)->send();
@@ -291,7 +308,7 @@ namespace Http {
 
 		/**
 		 * Request a remote resource using TRACE as the HTTP method.
-		 * @return object
+		 * @return Request
 		 */
 		public function trace(): Request {
 			return $this->setMethod(Method::TRACE)->send();
@@ -321,7 +338,7 @@ namespace Http {
 		/**
 		 * Patch those data to the service.
 		 * @param null|string|array $data - Data to send with this requst.
-		 * @return object
+		 * @return Request
 		 */
 		public function patch(null|string|array $data = null): Request {
 			return $this->setMethod(Method::PATCH)->send($data);

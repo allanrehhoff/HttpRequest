@@ -71,19 +71,30 @@ Available request methods include `get`, `post`, `post`, `patch`, `delete`, `hea
 	try {
 		$iRequest = new \Http\Request("https://httpbin.org/status/418");
 		$iResponse = $iRequest->post(["lorem", "ipsum"]);
-	} catch(\Http\ClientError $iThrowable) {
-		// There was an error with the implementation that made cURL return an error
-		print $iThrowable->getCode();
-		print $iThrowable->getMessage();
-	} catch(\Http\HttpError $iThrowable) {
+	} catch(\Http\HttpError $iHttpError) {
 		// There was an error that caused the remote to return a HTTP code >= 400
-		// This exception is also thrown, if too many redirects are found.
-		print $iThrowable->getCode();
-		print $iThrowable->getMessage();
-	} catch(\JsonException $iThrowable) {
+		// This is likely due to an errornous integration
+
+		// Error code will match the HTTP code returned by remote
+		$iHttpError->getCode();
+
+		// Error message will be the raw response body, likely in JSON
+		$iHttpError->getMessage();
+	} catch(\Http\ConnectionError $iConnectionError) {
+		// There was a unexpected error that made cURL unable to properly connect to remote
+
+		// Error code will be the curl generated error number
+		// as provided by curl_errno();
+		$iConnectionError->getCode();
+
+		// Error message will be the curl generated error message
+		// as provided by curl_error();
+		$iConnectionError->getMessage();
+	} catch(\JsonException $iJsonException) {
 		// The remote resource returned successfully.
 		// but the response body failed parsing as JSON
-		print $iThrowable->getCode();
-		print $iThrowable->getMessage();
+		// This exception is native to PHP
+		print $iJsonException->getCode();
+		print $iJsonException->getMessage();
 	}
 ```

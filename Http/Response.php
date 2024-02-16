@@ -45,12 +45,8 @@ namespace Http {
 			}
 
 			if(is_resource($verbosityHandle)) {
-				rewind($verbosityHandle); //@todo: Why do I need this, I'm still wondering...
-				$verboseContent = stream_get_contents($verbosityHandle);
-
-				$this->rawHeaders .= $verboseContent;
-				$this->responseHeaders["Verbosity"] = explode("\n", $verboseContent);
-				unset($verbosityHandle);
+				rewind($verbosityHandle);
+				$this->rawHeaders .= stream_get_contents($verbosityHandle);
 			}
 		}
 
